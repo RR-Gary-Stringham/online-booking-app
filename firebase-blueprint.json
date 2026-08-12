@@ -1,0 +1,45 @@
+{
+  "entities": {
+    "ProviderSettings": {
+      "title": "Provider Settings",
+      "description": "Configuration for a provider's availability, contact details, and meeting types",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The provider's display name" },
+        "email": { "type": "string", "description": "The contact email address of the provider" },
+        "businessName": { "type": "string", "description": "The name of the business or organization" },
+        "welcomeMessage": { "type": "string", "description": "A welcome intro message shown to clients" },
+        "timezone": { "type": "string", "description": "The preferred time zone" },
+        "colorTheme": { "type": "string", "description": "Theme color name e.g., indigo, emerald" }
+      },
+      "required": ["name", "email", "timezone"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "A scheduled meeting booked by a client",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier of the booking" },
+        "meetingTypeId": { "type": "string", "description": "Reference to the meeting type ID" },
+        "clientName": { "type": "string", "description": "Name of the booking client" },
+        "clientEmail": { "type": "string", "description": "Email of the booking client" },
+        "clientNotes": { "type": "string", "description": "Optional notes from the client" },
+        "date": { "type": "string", "description": "Booking date formatted as YYYY-MM-DD" },
+        "time": { "type": "string", "description": "Booking start time formatted as HH:MM" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled"], "description": "Status of the scheduled booking" },
+        "createdAt": { "type": "string", "description": "Timestamp when the booking was made" }
+      },
+      "required": ["meetingTypeId", "clientName", "clientEmail", "date", "time", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/settings/{settingsId}": {
+      "schema": "ProviderSettings",
+      "description": "Config and settings of availability"
+    },
+    "/bookings/{bookingId}": {
+      "schema": "Booking",
+      "description": "Client scheduled bookings"
+    }
+  }
+}
