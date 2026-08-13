@@ -1297,3 +1297,415 @@ body::before {
         transform: scale(0.16);
     }
 }
+
+/* ================================================================
+   REVREBEL BOOKING APP — BRAND SKIN
+   Visual overrides only. Application structure and behavior remain intact.
+   ================================================================ */
+
+:root {
+    --rr-ink: #163666;
+    --rr-ink-deep: #10284d;
+    --rr-teal: #047c97;
+    --rr-cyan: #00a6b6;
+    --rr-powder: #b2d3de;
+    --rr-frost: #eff5f6;
+    --rr-paper: #ffffff;
+    --rr-yellow: #faca78;
+    --rr-orange: #f37d59;
+    --rr-red: #e05047;
+    --rr-purple: #8e456a;
+    --rr-rule: rgba(22, 54, 102, 0.24);
+    --rr-shadow: 8px 8px 0 rgba(22, 54, 102, 0.12);
+
+    --background: #eff5f6;
+    --foreground: #163666;
+    --card: #ffffff;
+    --card-foreground: #163666;
+    --primary: #163666;
+    --primary-foreground: #b2d3de;
+    --secondary: #faca78;
+    --secondary-foreground: #163666;
+    --muted: #eff5f6;
+    --muted-foreground: #60738e;
+    --accent: #00a6b6;
+    --accent-foreground: #ffffff;
+    --destructive: #e05047;
+    --destructive-foreground: #ffffff;
+    --border: #163666;
+    --input: #b2d3de;
+    --ring: #00a6b6;
+    --radius: 0;
+
+    --base-primary: #163666;
+    --base-primary-fade: #b2d3de;
+    --base-primary-inverse: #b2d3de;
+    --base-primary-inverse-fade: #eff5f6;
+    --base-color-1: #047c97;
+    --base-color-2: #00a6b6;
+    --base-color-3: #b2d3de;
+    --base-color-4: #b2d3de;
+    --base-color-5: #faca78;
+    --base-color-6: #f37d59;
+    --base-color-7: #e05047;
+    --base-color-8: #8e456a;
+}
+
+html,
+body {
+    min-height: 100%;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: var(--rr-frost);
+    color: var(--rr-ink);
+    font-family: "Barlow", "Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-image:
+        linear-gradient(rgba(22, 54, 102, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(22, 54, 102, 0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+
+body::before {
+    opacity: 0.018;
+}
+
+#root {
+    width: 100%;
+    min-height: 100vh;
+    height: auto;
+}
+
+::selection {
+    color: var(--rr-ink);
+    background: var(--rr-yellow);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-display {
+    font-family: "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.035em !important;
+}
+
+p,
+label,
+input,
+textarea,
+select,
+table,
+.font-brand,
+.font-serif {
+    font-family: "Barlow", "Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif !important;
+}
+
+.font-mono {
+    font-family: "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace !important;
+}
+
+button,
+[role="button"] {
+    font-family: "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: 3px solid var(--rr-yellow) !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 1px var(--rr-ink) !important;
+}
+
+/* Replace Gemini's soft SaaS shells with the squared REVREBEL system. */
+[class*="rounded-"] {
+    border-radius: 0 !important;
+}
+
+[class*="shadow-"] {
+    box-shadow: none;
+}
+
+.rounded-full {
+    border-radius: 999px !important;
+}
+
+header.sticky {
+    background: var(--rr-ink) !important;
+    border-color: var(--rr-ink) !important;
+    box-shadow: 0 4px 0 var(--rr-cyan) !important;
+}
+
+header.sticky h1,
+header.sticky .text-slate-800 {
+    color: var(--rr-paper) !important;
+}
+
+header.sticky .text-slate-400,
+header.sticky .text-slate-500 {
+    color: var(--rr-powder) !important;
+}
+
+header.sticky > div > div:first-child > div:first-child {
+    color: var(--rr-ink) !important;
+    background: var(--rr-yellow) !important;
+    border: 2px solid var(--rr-yellow);
+}
+
+header.sticky [class*="bg-slate-100"] {
+    background: rgba(178, 211, 222, 0.13) !important;
+    border: 1px solid rgba(178, 211, 222, 0.35) !important;
+}
+
+header.sticky button {
+    color: var(--rr-powder) !important;
+}
+
+header.sticky button[class*="bg-white"] {
+    color: var(--rr-ink) !important;
+    background: var(--rr-yellow) !important;
+}
+
+main.max-w-6xl {
+    max-width: 76rem;
+}
+
+main > [class*="bg-white"][class*="border"] {
+    border: 2px solid var(--rr-ink) !important;
+    border-left: 8px solid var(--rr-cyan) !important;
+    background: var(--rr-paper) !important;
+}
+
+main > [class*="bg-white"][class*="border"] > div:first-child > div:first-child {
+    color: var(--rr-ink) !important;
+    background: var(--rr-yellow) !important;
+    border-color: var(--rr-ink) !important;
+}
+
+/* Primary client widget and provider dashboard frames. */
+.max-w-5xl[class*="bg-white"],
+.grid.lg\:grid-cols-12[class*="bg-white"] {
+    border: 3px solid var(--rr-ink) !important;
+    background: var(--rr-paper) !important;
+    box-shadow: var(--rr-shadow) !important;
+}
+
+.max-w-5xl[class*="bg-white"]::before {
+    display: none;
+}
+
+/* Dividers become deliberate graphic rules. */
+[class*="border-slate-100"],
+[class*="border-slate-150"],
+[class*="border-slate-200"] {
+    border-color: var(--rr-rule) !important;
+}
+
+[class*="text-slate-900"],
+[class*="text-slate-800"],
+[class*="text-slate-700"],
+[class*="text-slate-600"] {
+    color: var(--rr-ink) !important;
+}
+
+[class*="text-slate-500"],
+[class*="text-slate-400"] {
+    color: #64748b !important;
+}
+
+[class*="bg-slate-50"] {
+    background-color: var(--rr-frost) !important;
+}
+
+[class*="bg-slate-800"],
+[class*="bg-slate-900"] {
+    color: var(--rr-powder) !important;
+    background-color: var(--rr-ink) !important;
+}
+
+/* Form controls: crisp, wider, and visibly interactive. */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+    min-height: 42px;
+    color: var(--rr-ink) !important;
+    background: var(--rr-paper) !important;
+    border: 1.5px solid var(--rr-ink) !important;
+    border-radius: 0 !important;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+textarea {
+    min-height: 104px;
+}
+
+input:hover,
+textarea:hover,
+select:hover {
+    border-color: var(--rr-cyan) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #8492a5 !important;
+}
+
+input[type="checkbox"] {
+    accent-color: var(--rr-cyan);
+}
+
+/* Action hierarchy. */
+button[class*="bg-primary"],
+button[class*="bg-[var(--primary)]"],
+button[class*="bg-slate-800"],
+button[class*="bg-slate-900"] {
+    color: var(--rr-powder) !important;
+    background: var(--rr-ink) !important;
+    border: 2px solid var(--rr-ink) !important;
+    box-shadow: 4px 4px 0 var(--rr-powder) !important;
+    transition: transform 150ms ease, box-shadow 150ms ease, color 150ms ease, background 150ms ease;
+}
+
+button[class*="bg-primary"]:hover,
+button[class*="bg-[var(--primary)]"]:hover,
+button[class*="bg-slate-800"]:hover,
+button[class*="bg-slate-900"]:hover {
+    color: var(--rr-ink) !important;
+    background: var(--rr-yellow) !important;
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--rr-ink) !important;
+    opacity: 1 !important;
+}
+
+button:disabled {
+    transform: none !important;
+    box-shadow: none !important;
+    opacity: 0.42 !important;
+}
+
+/* Meeting type choices and calendar cells read as a structured system. */
+.grid button[class*="border"],
+.space-y-3 button[class*="border"],
+.space-y-4 button[class*="border"] {
+    border-width: 1.5px !important;
+    border-color: var(--rr-rule) !important;
+}
+
+.grid button[class*="border"]:hover,
+.space-y-3 button[class*="border"]:hover,
+.space-y-4 button[class*="border"]:hover {
+    border-color: var(--rr-cyan) !important;
+    background-color: var(--rr-frost) !important;
+}
+
+button[class*="ring-2"],
+button[class*="border-[var(--primary)]"] {
+    border-color: var(--rr-ink) !important;
+    box-shadow: inset 0 -5px 0 var(--rr-cyan) !important;
+}
+
+table thead {
+    color: var(--rr-powder) !important;
+    background: var(--rr-ink) !important;
+}
+
+table thead * {
+    color: inherit !important;
+}
+
+table tbody tr:hover {
+    background: var(--rr-frost) !important;
+}
+
+/* Provider rail. */
+.lg\:grid-cols-12 > .lg\:col-span-3 {
+    color: var(--rr-powder);
+    background: var(--rr-ink) !important;
+    border-right: 4px solid var(--rr-cyan) !important;
+}
+
+.lg\:grid-cols-12 > .lg\:col-span-3 h4,
+.lg\:grid-cols-12 > .lg\:col-span-3 .text-slate-800,
+.lg\:grid-cols-12 > .lg\:col-span-3 .text-slate-700,
+.lg\:grid-cols-12 > .lg\:col-span-3 .text-slate-600 {
+    color: var(--rr-paper) !important;
+}
+
+.lg\:grid-cols-12 > .lg\:col-span-3 .text-slate-400 {
+    color: var(--rr-powder) !important;
+}
+
+.lg\:grid-cols-12 > .lg\:col-span-3 button {
+    color: var(--rr-powder) !important;
+}
+
+.lg\:grid-cols-12 > .lg\:col-span-3 button:hover {
+    color: var(--rr-ink) !important;
+    background: var(--rr-powder) !important;
+}
+
+.lg\:grid-cols-12 > .lg\:col-span-3 button[class*="bg-slate-800"] {
+    color: var(--rr-ink) !important;
+    background: var(--rr-yellow) !important;
+    border-left: 5px solid var(--rr-orange) !important;
+    box-shadow: none !important;
+}
+
+footer {
+    color: var(--rr-powder);
+    background: var(--rr-ink) !important;
+    border-top: 4px solid var(--rr-cyan) !important;
+}
+
+footer [class*="text-slate"] {
+    color: var(--rr-powder) !important;
+}
+
+@keyframes rr-enter {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+main > * {
+    animation: rr-enter 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@media (max-width: 768px) {
+    main.max-w-6xl {
+        padding: 1rem;
+    }
+
+    .max-w-5xl[class*="bg-white"],
+    .grid.lg\:grid-cols-12[class*="bg-white"] {
+        border-width: 2px !important;
+        box-shadow: 5px 5px 0 rgba(22, 54, 102, 0.12) !important;
+    }
+
+    .lg\:grid-cols-12 > .lg\:col-span-3 {
+        border-right: 0 !important;
+        border-bottom: 4px solid var(--rr-cyan) !important;
+    }
+}
