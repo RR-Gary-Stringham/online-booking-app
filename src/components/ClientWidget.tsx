@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, User, Mail, MessageSquare, CheckCircle, ArrowLeft, Globe, Lock } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Mail, MessageSquare, CheckCircle, ArrowLeft, Globe, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { WeeklyWorkingDay, MeetingType, Booking, ProviderSettings } from '../types';
 import { CalendarEvent } from '../lib/googleCalendar';
@@ -41,8 +41,11 @@ export default function ClientWidget({
   const [windowOffset, setWindowOffset] = useState<number>(0); // Paginate sliding 14-day date bar
 
   // Customer form state
-  const [clientName, setClientName] = useState('');
+  const [clientFirstName, setClientFirstName] = useState('');
+  const [clientLastName, setClientLastName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+  const [clientCompany, setClientCompany] = useState('');
   const [clientNotes, setClientNotes] = useState('');
   const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
 
@@ -222,7 +225,7 @@ export default function ClientWidget({
     e.preventDefault();
     const newErrors: { name?: string; email?: string } = {};
 
-    if (!clientName.trim()) newErrors.name = 'Please enter your full name.';
+    if (!clientFirstName.trim() || !clientLastName.trim()) newErrors.name = 'Please enter your first and last name.';
     if (!clientEmail.trim() || !clientEmail.includes('@')) {
       newErrors.email = 'Please enter a valid business email.';
     }
@@ -237,12 +240,18 @@ export default function ClientWidget({
 
     setTimeout(() => {
       const generatedId = 'b-' + Math.floor(Math.random() * 10000000);
+      const clientName = `${clientFirstName.trim()} ${clientLastName.trim()}`;
+      const bookingNotes = [
+        clientPhone.trim() ? `Phone: ${clientPhone.trim()}` : '',
+        clientCompany.trim() ? `Hotel or Company: ${clientCompany.trim()}` : '',
+        clientNotes.trim() ? `Additional Information: ${clientNotes.trim()}` : '',
+      ].filter(Boolean).join('\n');
       setRecentBookingId(generatedId);
       onAddBooking({
         meetingTypeId: selectedType!.id,
         clientName,
         clientEmail,
-        clientNotes,
+        clientNotes: bookingNotes,
         date: selectedDateStr,
         time: selectedTimeSlot,
       });
@@ -256,8 +265,11 @@ export default function ClientWidget({
     setSelectedType(null);
     setSelectedDateStr('');
     setSelectedTimeSlot('');
-    setClientName('');
+    setClientFirstName('');
+    setClientLastName('');
     setClientEmail('');
+    setClientPhone('');
+    setClientCompany('');
     setClientNotes('');
     setErrors({});
   };
@@ -351,7 +363,7 @@ export default function ClientWidget({
         '--primary': primaryColorVar,
         '--primary-foreground': primaryForegroundVar
       } as React.CSSProperties}
-      className={`w-full max-w-5xl mx-auto bg-white border border-slate-200/80 rounded-[56px] shadow-[0_30px_70px_rgba(28,25,23,0.04)] overflow-hidden transition-all duration-500 ease-fluid relative ${isEmbedPreview ? 'md:max-w-none md:border-0 md:shadow-none shadow-none' : ''}`}
+      className={`booking-widget w-full max-w-5xl mx-auto overflow-hidden transition-all duration-500 ease-fluid relative ${step === 'success' ? 'is-confirmation-view' : ''} ${isEmbedPreview ? 'md:max-w-none' : ''}`}
     >
       {/* Fine inner bezel outline */}
       <div className="absolute inset-0 border border-white pointer-events-none rounded-[56px] m-[1px]"></div>
@@ -359,7 +371,7 @@ export default function ClientWidget({
       <div className="p-6 md:p-10 relative z-10">
         
         {/* ARCHITECTURAL HEADER */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-200/80 mb-8 font-brand">
+        <header className="booking-widget-header flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-200/80 mb-8 font-brand">
           <div className="flex items-center gap-4">
             {googleUser?.photoURL ? (
               <img
@@ -369,15 +381,13 @@ export default function ClientWidget({
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-[var(--primary)] flex items-center justify-center text-xs text-white font-semibold font-eyebrow shadow-sm uppercase">
+              <div className="avatar-initials w-10 h-10 rounded-full bg-[var(--primary)] flex items-center justify-center shadow-sm uppercase">
                 {displayName ? displayName.split(' ').map((n) => n[0]).join('') : 'R'}
               </div>
             )}
             <div>
               <h1 className="text-2xl font-display font-bold uppercase tracking-wider text-stone-900 leading-none">{displayName}</h1>
-              <p className="text-[10px] uppercase tracking-[0.15em] text-stone-500 font-medium mt-1 font-eyebrow">
-                {settings.businessName || 'Principal Strategic Partner'}
-              </p>
+              <p className="provider-title text-[10px] mt-1">Chief Rebel</p>
             </div>
           </div>
           
@@ -405,7 +415,7 @@ export default function ClientWidget({
               {/* STEP 1: MEETING TYPE SELECTION (TOP) */}
               <section className="mb-8">
                 <h2 className="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-bold mb-3.5 font-brand">
-                  01. Select Session Type
+                  01. Select a Meeting Option
                 </h2>
                 
                 {activeMeetingTypes.length === 0 ? (
@@ -413,7 +423,7 @@ export default function ClientWidget({
                     No active consult formats configured.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="meeting-options-grid grid grid-cols-2 md:grid-cols-4 gap-3">
                     {activeMeetingTypes.map((mt) => {
                       const isSelected = selectedType?.id === mt.id;
                       return (
@@ -427,10 +437,8 @@ export default function ClientWidget({
                               : 'border-slate-200 bg-white text-stone-850 hover:border-[var(--primary)]/50 hover:bg-stone-50/50'
                             }`}
                         >
-                          <span className="block text-2xl font-normal font-numbers">{mt.duration}</span>
-                          <span className={`text-[10px] tracking-wide uppercase font-eyebrow mt-1 block ${isSelected ? 'opacity-90 font-bold' : 'text-stone-500 font-semibold group-hover:text-stone-700'}`}>
-                            {mt.name}
-                          </span>
+                          <span className="meeting-duration block">{mt.duration}</span>
+                          <span className="meeting-duration-label block">Minute Meeting</span>
                         </button>
                       );
                     })}
@@ -459,13 +467,17 @@ export default function ClientWidget({
                           disabled={windowOffset === 0}
                           className="p-1 hover:bg-white hover:shadow-xs rounded text-stone-600 disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed transition cursor-pointer"
                         >
-                          <ChevronLeft size={14} />
+                          <svg className="date-nav-arrow date-nav-arrow-previous" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M50.86 78.01l36.41-26.06c.66-.48 1.04-1.24 1.05-2.05 0-.01 0-.01 0-.01 -.01-.82-.4-1.58-1.06-2.05L50.84 21.95c-.77-.55-1.78-.62-2.62-.19 -.84.42-1.37 1.29-1.37 2.23v12.18l-32.71-.01c-1.39 0-2.52 1.12-2.52 2.51l0 22.54c-.01 1.38 1.12 2.51 2.51 2.51h32.7V75.9c0 .94.53 1.8 1.36 2.23 .83.43 1.84.35 2.61-.2Z" />
+                          </svg>
                         </button>
                         <button
                           onClick={handleRowNext}
                           className="p-1 hover:bg-white hover:shadow-xs rounded text-stone-600 transition cursor-pointer"
                         >
-                          <ChevronRight size={14} />
+                          <svg className="date-nav-arrow" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M50.86 78.01l36.41-26.06c.66-.48 1.04-1.24 1.05-2.05 0-.01 0-.01 0-.01 -.01-.82-.4-1.58-1.06-2.05L50.84 21.95c-.77-.55-1.78-.62-2.62-.19 -.84.42-1.37 1.29-1.37 2.23v12.18l-32.71-.01c-1.39 0-2.52 1.12-2.52 2.51l0 22.54c-.01 1.38 1.12 2.51 2.51 2.51h32.7V75.9c0 .94.53 1.8 1.36 2.23 .83.43 1.84.35 2.61-.2Z" />
+                          </svg>
                         </button>
                       </div>
                     </div>
@@ -476,16 +488,17 @@ export default function ClientWidget({
                     {rowDays.map((d) => {
                       const isSelected = selectedDateStr === d.dateStr;
                       const isToday = d.dateStr === '2026-06-08';
+                      const displayDateLabel = String(d.dateLabel).padStart(2, '0');
 
                       // If weekend (Sat, Sun), show blended dotted background
                       if (d.isWeekend) {
                         return (
                           <div
                             key={d.dateStr}
-                            className="h-[84px] rounded-2xl bg-stone-100/40 border border-dotted border-stone-200 flex flex-col items-center justify-center gap-1 opacity-50 select-none cursor-not-allowed font-brand"
+                            className="unavailable-date-tile weekend-date-tile bg-stone-100/40 border border-dotted border-stone-200 flex flex-col items-center justify-center opacity-50 select-none cursor-not-allowed"
                           >
-                            <span className="text-[9px] uppercase tracking-wider text-stone-500 font-semibold">{d.dayLabel}</span>
-                            <span className="text-base font-normal text-stone-500 font-numbers">{d.dateLabel}</span>
+                            <span className="unavailable-date-weekday text-stone-500">{d.dayLabel}</span>
+                            <span className="unavailable-date-number text-stone-500">{displayDateLabel}</span>
                           </div>
                         );
                       }
@@ -495,10 +508,10 @@ export default function ClientWidget({
                         return (
                           <div
                             key={d.dateStr}
-                            className="h-[84px] rounded-2xl border border-red-200 bg-red-50/50 flex flex-col items-center justify-center gap-1 opacity-70 select-none cursor-not-allowed font-brand"
+                            className="unavailable-date-tile nonworking-date-tile border border-red-200 bg-red-50/50 flex flex-col items-center justify-center opacity-70 select-none cursor-not-allowed"
                           >
-                            <span className="text-[9px] uppercase tracking-wider text-red-500/70 font-semibold">{d.dayLabel}</span>
-                            <span className="text-base font-normal tracking-tight text-red-500/80 line-through decoration-1 font-numbers">{d.dateLabel}</span>
+                            <span className="unavailable-date-weekday text-red-500/70">{d.dayLabel}</span>
+                            <span className="unavailable-date-number text-red-500/80 line-through decoration-1">{displayDateLabel}</span>
                           </div>
                         );
                       }
@@ -509,18 +522,18 @@ export default function ClientWidget({
                           key={d.dateStr}
                           id={`cal-day-${d.dateStr}`}
                           onClick={() => handleSelectDate(d.dateStr, d.isWorkingDay)}
-                          className={`h-[84px] rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition-all duration-300 ease-fluid cursor-pointer font-brand relative group
+                          className={`available-date-tile aspect-square border flex flex-col items-center justify-center gap-1.5 transition-all duration-300 ease-fluid cursor-pointer relative group
                             ${isSelected
-                              ? 'bg-[var(--primary)] border-[var(--primary)] text-[var(--primary-foreground)] scale-[1.04] shadow-[0_8px_16px_rgba(28,25,23,0.15)] font-bold'
+                              ? 'is-selected bg-[var(--primary)] border-[var(--primary)] text-[var(--primary-foreground)] font-bold'
                               : 'border-slate-200 bg-white text-stone-850 hover:border-[var(--primary)]/50 hover:bg-stone-50/30'
                             }`}
                         >
-                          <span className={`text-[9px] uppercase tracking-wider font-bold ${isSelected ? 'text-[var(--primary-foreground)]/85' : 'text-stone-500'}`}>
+                          <span className="available-date-weekday">
                             {d.dayLabel}
                           </span>
-                          <span className="text-base font-normal tracking-tight font-numbers">{d.dateLabel}</span>
+                          <span className="available-date-number">{displayDateLabel}</span>
                           {isToday && (
-                            <span className={`absolute bottom-2.5 w-1 h-1 rounded-full ${isSelected ? 'bg-[var(--primary-foreground)]' : 'bg-[var(--color-green)]'}`} />
+                            <span className={`date-status-dot w-1 h-1 rounded-full ${isSelected ? 'bg-[var(--primary-foreground)]' : 'bg-[var(--color-green)]'}`} />
                           )}
                         </button>
                       );
@@ -550,7 +563,7 @@ export default function ClientWidget({
                       All hours fully booked. Please scroll or paginate dates above.
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="time-slots-grid grid grid-cols-2 md:grid-cols-5 gap-3">
                       {availableSlotsForSelectedDate.map((slot) => {
                         const isSelected = selectedTimeSlot === slot.time;
                         
@@ -558,9 +571,9 @@ export default function ClientWidget({
                           return (
                             <div
                               key={slot.time}
-                              className="py-3 border border-red-150 bg-red-50/20 text-red-450 rounded-xl text-xs font-normal text-center line-through cursor-not-allowed select-none font-numbers opacity-60"
+                              className="unavailable-time-tile py-3 text-center cursor-not-allowed select-none opacity-60"
                             >
-                              {formatTime12h(slot.time)} (Full)
+                              {formatTime12h(slot.time)}
                             </div>
                           );
                         }
@@ -571,9 +584,9 @@ export default function ClientWidget({
                             id={`slot-btn-${slot.time}`}
                             disabled={slot.isBooked || slot.isPast}
                             onClick={() => setSelectedTimeSlot(slot.time)}
-                            className={`py-3 border rounded-xl text-xs font-normal transition-all duration-300 ease-fluid text-center cursor-pointer font-numbers
+                            className={`available-time-tile py-3 border text-center cursor-pointer transition-all duration-300 ease-fluid
                               ${isSelected
-                                ? 'bg-[var(--primary)] border-[var(--primary)] text-[var(--primary-foreground)] shadow-[0_4px_12px_rgba(28,25,23,0.15)] scale-[1.02]'
+                                ? 'is-selected bg-[var(--primary)] border-[var(--primary)] text-[var(--primary-foreground)]'
                                 : 'border-slate-200 bg-white text-stone-850 hover:border-[var(--primary)]/55 hover:bg-stone-50/50'
                               }`}
                           >
@@ -600,14 +613,14 @@ export default function ClientWidget({
                   <form onSubmit={handleSubmitBooking} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-1">
                       <label className="block text-[9px] uppercase tracking-widest text-stone-500 font-bold mb-1.5 font-eyebrow">
-                        Your Full Name
+                        First Name
                       </label>
                       <input
                         type="text"
                         required
-                        placeholder="Jane Doe"
-                        value={clientName}
-                        onChange={(e) => setClientName(e.target.value)}
+                        placeholder="Biggs"
+                        value={clientFirstName}
+                        onChange={(e) => setClientFirstName(e.target.value)}
                         className={`w-full bg-stone-50/50 border rounded-xl px-4 py-3.5 text-xs focus:outline-none focus:ring-1 focus:ring-[var(--primary)]/20 transition-all duration-300 ease-fluid font-sans text-stone-900 font-medium ${errors.name ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-[var(--primary)]'}`}
                       />
                       {errors.name && <p className="text-xs text-red-500 mt-1 font-medium">{errors.name}</p>}
@@ -615,25 +628,40 @@ export default function ClientWidget({
 
                     <div className="md:col-span-1">
                       <label className="block text-[9px] uppercase tracking-widest text-stone-500 font-bold mb-1.5 font-eyebrow">
-                        Business Email
+                        Last Name
                       </label>
                       <input
-                        type="email"
+                        type="text"
                         required
-                        placeholder="partner@company.com"
-                        value={clientEmail}
-                        onChange={(e) => setClientEmail(e.target.value)}
-                        className={`w-full bg-stone-50/50 border rounded-xl px-4 py-3.5 text-xs focus:outline-none focus:ring-1 focus:ring-[var(--primary)]/20 transition-all duration-300 ease-fluid font-sans text-stone-900 font-medium ${errors.email ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-[var(--primary)]'}`}
+                        placeholder="Darklighter"
+                        value={clientLastName}
+                        onChange={(e) => setClientLastName(e.target.value)}
+                        className={`w-full bg-stone-50/50 border rounded-xl px-4 py-3.5 text-xs focus:outline-none focus:ring-1 focus:ring-[var(--primary)]/20 transition-all duration-300 ease-fluid font-sans text-stone-900 font-medium ${errors.name ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-[var(--primary)]'}`}
                       />
+                    </div>
+
+                    <div className="md:col-span-1">
+                      <label className="block text-[9px] uppercase tracking-widest text-stone-500 font-bold mb-1.5 font-eyebrow">
+                        Email
+                      </label>
+                      <input type="email" required placeholder="biggs.darklighter@revrebel.io" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} className={`w-full bg-stone-50/50 border rounded-xl px-4 py-3.5 text-xs focus:outline-none transition-all duration-300 ease-fluid ${errors.email ? 'border-red-300' : 'border-slate-200'}`} />
                       {errors.email && <p className="text-xs text-red-500 mt-1 font-medium">{errors.email}</p>}
                     </div>
 
+                    <div className="md:col-span-1">
+                      <label className="block text-[9px] uppercase tracking-widest text-stone-500 font-bold mb-1.5 font-eyebrow">Phone</label>
+                      <input type="tel" placeholder="(312) 123-4567" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} className="w-full bg-stone-50/50 border border-slate-200 px-4 py-3.5 text-xs focus:outline-none transition-all duration-300 ease-fluid" />
+                    </div>
+
                     <div className="md:col-span-2">
-                      <label className="block text-[9px] uppercase tracking-widest text-stone-500 font-bold mb-1.5 font-eyebrow">
-                        Strategic Alignment Objective
-                      </label>
+                      <label className="block text-[9px] uppercase tracking-widest text-stone-500 font-bold mb-1.5 font-eyebrow">Hotel or Company Name</label>
+                      <input type="text" placeholder="Red Squadron" value={clientCompany} onChange={(e) => setClientCompany(e.target.value)} className="w-full bg-stone-50/50 border border-slate-200 px-4 py-3.5 text-xs focus:outline-none transition-all duration-300 ease-fluid" />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-[9px] uppercase tracking-widest text-stone-500 font-bold mb-1.5 font-eyebrow">Additional Information</label>
                       <textarea
-                        placeholder="Outline high-level goals or alignment parameters..."
+                        placeholder="Additional Information"
                         rows={3}
                         value={clientNotes}
                         onChange={(e) => setClientNotes(e.target.value)}
@@ -641,25 +669,16 @@ export default function ClientWidget({
                       />
                     </div>
 
-                    <div className="md:col-span-2 pt-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border-t border-slate-100 mt-4">
-                      <div className="flex flex-col font-brand">
-                        <span className="text-[9px] text-stone-400 uppercase tracking-[0.15em] font-medium font-eyebrow">
-                          Confirming Appointment
-                        </span>
-                        <span className="text-xs font-semibold text-stone-900 mt-0.5">
-                          {selectedType.name} — {formattedSelectedDate} at <span className="font-numbers font-normal text-stone-900">{formatTime12h(selectedTimeSlot)}</span>
-                        </span>
-                      </div>
-
+                    <div className="md:col-span-2 pt-4 flex justify-end border-t border-slate-100 mt-4">
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="inline-flex items-center justify-between md:justify-center gap-4 bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 py-4 px-8 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 ease-fluid shadow-[0_8px_20px_rgba(28,25,23,0.1)] cursor-pointer animate-none"
+                        className="rr-button cursor-pointer animate-none"
                       >
                         <span>{isSubmitting ? 'Securing Session...' : 'Secure Session'}</span>
-                        <span className="p-1 rounded-full bg-[var(--primary-foreground)]/20 flex items-center justify-center shrink-0">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        <span className="rr-button-icon flex items-center justify-center shrink-0">
+                          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M50.86 78.01l36.41-26.06c.66-.48 1.04-1.24 1.05-2.05 0-.01 0-.01 0-.01 -.01-.82-.4-1.58-1.06-2.05L50.84 21.95c-.77-.55-1.78-.62-2.62-.19 -.84.42-1.37 1.29-1.37 2.23v12.18l-32.71-.01c-1.39 0-2.52 1.12-2.52 2.51l0 22.54c-.01 1.38 1.12 2.51 2.51 2.51h32.7V75.9c0 .94.53 1.8 1.36 2.23 .83.43 1.84.35 2.61-.2Z" />
                           </svg>
                         </span>
                       </button>
@@ -670,7 +689,7 @@ export default function ClientWidget({
               )}
 
               <footer className="text-[10px] text-stone-400 font-medium font-eyebrow mt-12 flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 pt-4 gap-2">
-                <span>Timezone: <strong className="text-stone-600 font-semibold">{settings.timezone}</strong></span>
+                <span>Timezone: <strong>{settings.timezone}</strong></span>
               </footer>
 
             </motion.div>
@@ -680,21 +699,30 @@ export default function ClientWidget({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="p-8 flex flex-col items-center text-center py-20 font-brand w-full"
+              className="confirmation-layout font-brand w-full"
             >
-              <h1 className="font-display text-4xl font-extrabold tracking-tight text-[var(--color-foreground)] mb-3 uppercase">
-                Reservation Confirmed
-              </h1>
-              <p className="text-sm text-[var(--color-foreground)] leading-relaxed w-full md:w-2/3 max-w-2xl mx-auto mb-8 font-light">
-                {displayName} is scheduled for your <strong>{selectedType?.name}</strong> (<strong>{selectedType?.duration} Min Sync</strong>) on <strong>{formattedSelectedDate}</strong> at <span className="font-numbers font-normal text-[var(--color-foreground)]">{formatTime12h(selectedTimeSlot)}</span>. Confirmation Reference: <code className="bg-stone-100 font-mono text-[10px] px-1.5 py-0.5 rounded text-[var(--color-foreground)] font-bold">{recentBookingId}</code>.
-              </p>
-              
-              <button
-                onClick={resetFlow}
-                className="px-8 py-3.5 border border-slate-200 hover:border-stone-800 rounded-full text-[10px] uppercase tracking-wider font-bold transition-all duration-300 ease-fluid cursor-pointer"
-              >
-                Schedule Another Session
-              </button>
+              <div className="confirmation-copy">
+                <h1 className="confirmation-title">
+                  <span>Meeting</span>
+                  <span>Confirmed</span>
+                </h1>
+                <p className="confirmation-message">
+                  <strong>Get ready to dig into the good stuff — insights, strategy, and possibly a metaphor or two about space travel or spreadsheets. Your time with us is confirmed and we’ll bring the brains, bandwidth, and a finely tuned playlist of solutions.</strong>
+                </p>
+              </div>
+
+              <div className="confirmation-details">
+                <p className="confirmation-intro">
+                  Your meeting with {displayName} is officially locked in for<br />
+                  {formattedSelectedDate} at {formatTime12h(selectedTimeSlot)} ({settings.timezone}).
+                </p>
+                <button
+                  onClick={resetFlow}
+                  className="rr-button-outline cursor-pointer"
+                >
+                  Schedule Another
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

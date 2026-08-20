@@ -52,6 +52,14 @@ const DEFAULT_MEETING_TYPES: MeetingType[] = [
     color: 'amber',
     enabled: true,
   },
+  {
+    id: 'mt-4',
+    name: 'Extended Strategy Session',
+    duration: 90,
+    description: 'An extended working session for complex planning, collaborative reviews, and in-depth strategic development.',
+    color: 'dark-blue',
+    enabled: true,
+  },
 ];
 
 // Seed initial bookings for a live dashboard feel (2026-06-08 is current date)

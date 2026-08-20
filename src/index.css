@@ -1363,10 +1363,7 @@ body {
 }
 
 body {
-    background-image:
-        linear-gradient(rgba(22, 54, 102, 0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(22, 54, 102, 0.035) 1px, transparent 1px);
-    background-size: 32px 32px;
+    background-image: none;
 }
 
 body::before {
@@ -1377,6 +1374,10 @@ body::before {
     width: 100%;
     min-height: 100vh;
     height: auto;
+}
+
+#root > div.min-h-screen {
+    background: #eff5f6 !important;
 }
 
 ::selection {
@@ -1500,6 +1501,169 @@ main > [class*="bg-white"][class*="border"] > div:first-child > div:first-child 
     border: 3px solid var(--rr-ink) !important;
     background: var(--rr-paper) !important;
     box-shadow: var(--rr-shadow) !important;
+}
+
+/* Client booking surface: explicit REVREBEL component treatment. */
+.booking-widget {
+    color: #163666 !important;
+    background: #fafafa !important;
+    border: 3px solid #163666 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.booking-widget,
+.booking-widget * {
+    color: #163666;
+}
+
+.booking-widget > .absolute.inset-0 {
+    display: none;
+}
+
+.booking-widget .provider-title {
+    color: #163666 !important;
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.booking-widget .avatar-initials {
+    color: #b2d3de !important;
+    font-family: "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif !important;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.04em;
+}
+
+.booking-widget .meeting-options-grid .duration-btn {
+    aspect-ratio: 1 / 1;
+    padding: 1rem;
+    color: #163666 !important;
+    background: #ffffff !important;
+    border: 2px solid #163666 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.booking-widget .meeting-options-grid .duration-btn:hover,
+.booking-widget .meeting-options-grid .duration-btn[class*="bg-[var(--primary)]"] {
+    color: #163666 !important;
+    background: #eff5f6 !important;
+    border-color: #163666 !important;
+    box-shadow: none !important;
+    transform: none;
+}
+
+.booking-widget .meeting-duration {
+    color: #163666 !important;
+    font-family: "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif !important;
+    font-size: 90px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.booking-widget .meeting-duration-label {
+    margin-top: 0.45rem;
+    color: #163666 !important;
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.booking-widget .duration-btn,
+.booking-widget [id^="slot-btn-"] {
+    color: #163666 !important;
+    background: #ffffff !important;
+    border: 2px solid #163666 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.booking-widget [id^="slot-btn-"]:hover,
+.booking-widget [id^="slot-btn-"][class*="bg-[var(--primary)]"] {
+    color: #163666 !important;
+    background: #eff5f6 !important;
+    border: 2px solid #163666 !important;
+    box-shadow: none !important;
+    transform: none;
+}
+
+.booking-widget .available-date-tile {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    height: auto;
+    color: #163666 !important;
+    background: #ffffff !important;
+    border: 1px solid #163666 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.booking-widget .available-date-tile:hover {
+    color: #163666 !important;
+    background: #eff5f6 !important;
+    border: 1px solid #163666 !important;
+    box-shadow: none !important;
+}
+
+.booking-widget .available-date-tile.is-selected,
+.booking-widget .available-date-tile.is-selected:hover {
+    color: #b2d3de !important;
+    background: #163666 !important;
+    border: 1px solid #163666 !important;
+    box-shadow: none !important;
+}
+
+.booking-widget .available-date-weekday {
+    color: #163666 !important;
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.booking-widget .available-date-number {
+    color: #163666 !important;
+    font-family: "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif !important;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0;
+}
+
+.booking-widget .available-date-tile.is-selected .available-date-weekday,
+.booking-widget .available-date-tile.is-selected .available-date-number {
+    color: #b2d3de !important;
+}
+
+.booking-widget footer {
+    color: #163666 !important;
+    background: transparent !important;
+    border: 0 !important;
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 400 !important;
+}
+
+.booking-widget footer * {
+    color: #163666 !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    font-weight: 400 !important;
 }
 
 .max-w-5xl[class*="bg-white"]::before {
@@ -1707,5 +1871,788 @@ main > * {
     .lg\:grid-cols-12 > .lg\:col-span-3 {
         border-right: 0 !important;
         border-bottom: 4px solid var(--rr-cyan) !important;
+    }
+}
+
+/* Date tile final cascade guard: keeps legacy global button rules out. */
+.booking-widget button.available-date-tile {
+    color: #163666 !important;
+    background-color: #ffffff !important;
+    border: 2px solid #163666 !important;
+    border-bottom: 2px solid #163666 !important;
+    box-shadow: none !important;
+}
+
+.booking-widget button.available-date-tile.is-selected,
+.booking-widget button.available-date-tile.is-selected:hover {
+    color: #b2d3de !important;
+    background-color: #163666 !important;
+    border: 2px solid #163666 !important;
+    border-bottom: 2px solid #163666 !important;
+    box-shadow: none !important;
+}
+
+.booking-widget button.available-date-tile > .available-date-weekday {
+    color: #163666 !important;
+    font: 400 11px/1 "Roboto", Arial, Helvetica, sans-serif !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+}
+
+.booking-widget button.available-date-tile > .available-date-number {
+    color: #163666 !important;
+    font: 700 22px/1 "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+}
+
+.booking-widget button.available-date-tile.is-selected > .available-date-weekday,
+.booking-widget button.available-date-tile.is-selected > .available-date-number {
+    color: #b2d3de !important;
+}
+
+.booking-widget button.available-date-tile,
+.booking-widget .unavailable-date-tile {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    height: auto;
+    gap: 0.2rem !important;
+    border-radius: 0 !important;
+    box-sizing: border-box;
+}
+
+.booking-widget .unavailable-date-weekday {
+    font: 400 11px/1 "Roboto", Arial, Helvetica, sans-serif !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+}
+
+.booking-widget .unavailable-date-number {
+    font: 700 22px/1 "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+}
+
+.booking-widget .date-status-dot {
+    position: static !important;
+    flex: 0 0 auto;
+    margin-top: 0 !important;
+}
+
+.booking-widget button.available-date-tile:hover {
+    color: #163666 !important;
+    background-color: #eff5f6 !important;
+    border: 2px solid #163666 !important;
+    box-shadow: none !important;
+}
+
+.booking-widget button.available-date-tile.is-selected:hover {
+    color: #b2d3de !important;
+    background-color: #163666 !important;
+    border: 2px solid #163666 !important;
+}
+
+/* Shared date/time states. */
+.booking-widget .unavailable-date-tile,
+.booking-widget .unavailable-time-tile {
+    color: #e1e1e1 !important;
+    background: #eeeeee !important;
+    border: 1px solid #d5d5d5 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.booking-widget .unavailable-date-tile {
+    opacity: 1 !important;
+}
+
+.booking-widget .unavailable-date-tile *,
+.booking-widget .unavailable-time-tile {
+    color: #e1e1e1 !important;
+}
+
+.booking-widget .unavailable-time-tile {
+    opacity: 1 !important;
+    padding-top: 15px !important;
+    padding-bottom: 15px !important;
+    font: 700 22px/1 "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif !important;
+    text-decoration: none !important;
+}
+
+.booking-widget .available-time-tile {
+    padding-top: 15px !important;
+    padding-bottom: 15px !important;
+    color: #163666 !important;
+    background: #ffffff !important;
+    border: 2px solid #163666 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    font: 700 22px/1 "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif !important;
+    letter-spacing: 0 !important;
+}
+
+.booking-widget .available-time-tile:hover,
+.booking-widget button.available-date-tile:hover {
+    color: #163666 !important;
+    background: #eff5f6 !important;
+    border: 2px solid #163666 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* Confirmation cascade guards: keep the reference palette and compact proportions. */
+.booking-widget.is-confirmation-view .confirmation-layout {
+    padding-top: 68px;
+    padding-bottom: 62px;
+}
+
+.booking-widget.is-confirmation-view .confirmation-intro {
+    color: #35b8c5 !important;
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+    font-weight: 300 !important;
+}
+
+.booking-widget.is-confirmation-view .confirmation-message,
+.booking-widget.is-confirmation-view .confirmation-message strong {
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+    font-weight: 400 !important;
+}
+
+@media (max-width: 640px) {
+    .booking-widget.is-confirmation-view .confirmation-layout {
+        padding-top: 42px;
+        padding-bottom: 48px;
+    }
+}
+
+/* Workspace navigation specificity guards against the legacy provider rail. */
+.admin-workspace.lg\:grid-cols-12 > .lg\:col-span-3 {
+    color: #163666 !important;
+    background: #eff5f6 !important;
+    border-right: 2px solid #163666 !important;
+}
+
+.admin-workspace.lg\:grid-cols-12 > .lg\:col-span-3 h4,
+.admin-workspace.lg\:grid-cols-12 > .lg\:col-span-3 .text-slate-800,
+.admin-workspace.lg\:grid-cols-12 > .lg\:col-span-3 .text-slate-700,
+.admin-workspace.lg\:grid-cols-12 > .lg\:col-span-3 .text-slate-600,
+.admin-workspace.lg\:grid-cols-12 > .lg\:col-span-3 .text-slate-400 {
+    color: #163666 !important;
+}
+
+.admin-workspace button[id^="tab-"] {
+    color: #163666 !important;
+}
+
+.admin-workspace button[id^="tab-"][class*="bg-slate-800"] {
+    color: #b2d3de !important;
+    background: #163666 !important;
+    border: 1px solid #163666 !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 1023px) {
+    .admin-workspace.lg\:grid-cols-12 > .lg\:col-span-3 {
+        border-right: 0 !important;
+        border-bottom: 2px solid #163666 !important;
+    }
+}
+
+/* REVREBEL provider workspace skin. Administrative behavior remains unchanged. */
+.admin-workspace {
+    color: #163666 !important;
+    background: #fafafa !important;
+    border: 3px solid #163666 !important;
+    border-radius: 2px !important;
+    box-shadow: none !important;
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+}
+
+.admin-workspace * {
+    border-color: #163666;
+}
+
+.admin-workspace h1,
+.admin-workspace h2,
+.admin-workspace h3,
+.admin-workspace h4,
+.admin-workspace h5,
+.admin-workspace h6,
+.admin-workspace .font-display {
+    color: #163666 !important;
+    font-family: "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif !important;
+}
+
+.admin-workspace h3 {
+    font-size: 30px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: -0.015em !important;
+    text-transform: uppercase;
+}
+
+.admin-workspace p,
+.admin-workspace label,
+.admin-workspace input,
+.admin-workspace select,
+.admin-workspace textarea,
+.admin-workspace td,
+.admin-workspace th {
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+}
+
+.admin-workspace > div:first-child {
+    background: #eff5f6 !important;
+    border-right: 2px solid #163666 !important;
+}
+
+.admin-workspace > div:first-child > div > div:first-child > div:first-child {
+    color: #b2d3de !important;
+    background: #163666 !important;
+    border-radius: 50% !important;
+    box-shadow: none !important;
+}
+
+.admin-workspace [id^="tab-"] {
+    color: #163666 !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 2px !important;
+    box-shadow: none !important;
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+    font-weight: 400 !important;
+}
+
+.admin-workspace [id^="tab-"]:hover {
+    background: #ffffff !important;
+    border-color: #163666 !important;
+}
+
+.admin-workspace [id^="tab-"][class*="bg-slate-800"] {
+    color: #b2d3de !important;
+    background: #163666 !important;
+    border-color: #163666 !important;
+    font-weight: 700 !important;
+}
+
+.admin-workspace input:not([type="checkbox"]):not([type="radio"]),
+.admin-workspace select,
+.admin-workspace textarea {
+    color: #163666 !important;
+    background: #ffffff !important;
+    border: 2px solid #163666 !important;
+    border-radius: 2px !important;
+    box-shadow: none !important;
+    font-weight: 400 !important;
+}
+
+.admin-workspace input::placeholder,
+.admin-workspace textarea::placeholder {
+    color: #8492a5 !important;
+    font-weight: 300 !important;
+    opacity: 1;
+}
+
+.admin-workspace input:focus,
+.admin-workspace select:focus,
+.admin-workspace textarea:focus,
+.admin-workspace button:focus,
+.admin-workspace button:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.admin-workspace table {
+    border: 2px solid #163666;
+}
+
+.admin-workspace thead tr {
+    color: #163666 !important;
+    background: #eff5f6 !important;
+    border-bottom: 2px solid #163666 !important;
+}
+
+.admin-workspace tbody tr {
+    color: #163666 !important;
+    background: #ffffff !important;
+}
+
+.admin-workspace tbody tr:hover {
+    background: #eff5f6 !important;
+}
+
+.admin-workspace td,
+.admin-workspace th,
+.admin-workspace td div,
+.admin-workspace td span {
+    color: inherit;
+}
+
+.admin-workspace [id^="btn-save-"],
+.admin-workspace #btn-save-settings,
+.admin-workspace #btn-test-email,
+.admin-workspace #btn-connect-google {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: #b2d3de !important;
+    background: #163666 !important;
+    padding: 1rem 1.15rem !important;
+    border: 3px solid #163666 !important;
+    border-radius: 2px !important;
+    box-shadow: none !important;
+    font-family: "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase;
+}
+
+.admin-workspace [id^="btn-save-"]:hover,
+.admin-workspace #btn-save-settings:hover,
+.admin-workspace #btn-test-email:hover,
+.admin-workspace #btn-connect-google:hover {
+    color: #163666 !important;
+    background: #b2d3de !important;
+    outline: 3px solid #455e84 !important;
+    outline-offset: -3px !important;
+    box-shadow:
+        #163666 1px 1px 0,
+        #163666 2px 2px 0,
+        #163666 3px 3px 0,
+        #163666 4px 4px 0,
+        #163666 5px 5px 0,
+        #163666 6px 6px 0,
+        #163666 7px 7px 0,
+        #163666 8px 8px 0 !important;
+    transform: translate(-4px, -4px) !important;
+}
+
+.admin-workspace #btn-show-add-type {
+    color: #163666 !important;
+    background: transparent !important;
+    border: 2px solid #163666 !important;
+    border-radius: 2px !important;
+    font-family: "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+}
+
+.admin-workspace #btn-show-add-type:hover {
+    background: #eff5f6 !important;
+}
+
+@media (max-width: 1023px) {
+    .admin-workspace > div:first-child {
+        border-right: 0 !important;
+        border-bottom: 2px solid #163666 !important;
+    }
+}
+
+/* Compact confirmation composition mirrors the REVREBEL reference layout. */
+.booking-widget.is-confirmation-view {
+    max-width: 760px !important;
+}
+
+.booking-widget.is-confirmation-view > .relative {
+    padding: 0 !important;
+}
+
+.booking-widget.is-confirmation-view .booking-widget-header {
+    min-height: 122px;
+    margin: 0 !important;
+    padding: 34px 78px !important;
+    border-bottom: 2px solid #163666 !important;
+}
+
+.booking-widget.is-confirmation-view .booking-widget-header > div:first-child {
+    gap: 14px !important;
+}
+
+.booking-widget.is-confirmation-view .booking-widget-header .avatar-initials,
+.booking-widget.is-confirmation-view .booking-widget-header img {
+    width: 38px !important;
+    height: 38px !important;
+}
+
+.booking-widget.is-confirmation-view .booking-widget-header h1 {
+    font-size: 18px !important;
+    letter-spacing: 0 !important;
+}
+
+.booking-widget.is-confirmation-view .booking-widget-header .provider-title {
+    margin-top: 2px !important;
+    font-size: 9px !important;
+}
+
+.booking-widget .confirmation-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    align-items: start;
+    gap: 46px;
+    padding: 80px 78px 84px;
+    text-align: left;
+}
+
+.booking-widget .confirmation-title {
+    display: flex;
+    flex-direction: column;
+    margin: 0 0 24px;
+    color: #163666;
+    font: 700 54px/0.88 "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif;
+    letter-spacing: -0.035em;
+    text-transform: uppercase;
+}
+
+.booking-widget .confirmation-message {
+    max-width: 380px;
+    margin: 0;
+    font-size: 11px !important;
+    line-height: 1.38 !important;
+}
+
+.booking-widget .confirmation-details {
+    padding-top: 12px;
+}
+
+.booking-widget .confirmation-intro {
+    margin: 0 0 24px;
+    color: #35b8c5 !important;
+    font-size: 11px !important;
+    line-height: 1.42 !important;
+}
+
+.booking-widget.is-confirmation-view .rr-button-outline {
+    padding: 10px 18px;
+    font-size: 11px;
+}
+
+@media (max-width: 640px) {
+    .booking-widget.is-confirmation-view .booking-widget-header {
+        min-height: 0;
+        padding: 24px !important;
+    }
+
+    .booking-widget .confirmation-layout {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        padding: 42px 24px 48px;
+    }
+
+    .booking-widget .confirmation-title {
+        font-size: 46px;
+    }
+
+    .booking-widget .confirmation-details {
+        padding-top: 0;
+    }
+}
+
+.booking-widget .confirmation-intro,
+.booking-widget .confirmation-message,
+.booking-widget .confirmation-message strong {
+    color: #163666 !important;
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+}
+
+.booking-widget .confirmation-intro {
+    font-weight: 400;
+}
+
+.booking-widget .confirmation-message,
+.booking-widget .confirmation-message strong {
+    font-weight: 700;
+}
+
+.booking-widget .rr-button-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: "Khand", sans-serif !important;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.05em;
+    color: #163666 !important;
+    background-color: transparent !important;
+    text-transform: uppercase;
+    padding: 1.25rem 1.15rem;
+    border: 3px solid #163666 !important;
+    border-radius: 2px !important;
+    text-decoration: none;
+    box-shadow: none !important;
+    transform: none !important;
+    opacity: 1;
+}
+
+.booking-widget .rr-button-outline:hover {
+    color: #163666 !important;
+    background-color: transparent !important;
+    outline: 3px solid #455e84 !important;
+    outline-offset: -3px !important;
+    box-shadow:
+        #163666 0.5px 0.5px 0,
+        #163666 1px 1px 0,
+        #163666 1.5px 1.5px 0,
+        #163666 2px 2px 0,
+        #163666 2.5px 2.5px 0,
+        #163666 3px 3px 0,
+        #163666 3.5px 3.5px 0,
+        #163666 4px 4px 0,
+        #163666 4.5px 4.5px 0,
+        #163666 5px 5px 0,
+        #163666 5.5px 5.5px 0,
+        #163666 6px 6px 0,
+        #163666 6.5px 6.5px 0,
+        #163666 7px 7px 0,
+        #163666 7.5px 7.5px 0,
+        #163666 8px 8px 0,
+        #163666 8.5px 8.5px 0 !important;
+    transform: translate(-4px, -4px) !important;
+}
+
+.booking-widget .rr-button-outline:active {
+    outline: 3px solid #455e84 !important;
+    outline-offset: -3px !important;
+    box-shadow:
+        #163666 0.5px 0.5px 0,
+        #163666 1px 1px 0,
+        #163666 1.5px 1.5px 0,
+        #163666 2px 2px 0,
+        #163666 2.5px 2.5px 0,
+        #163666 3px 3px 0,
+        #163666 3.5px 3.5px 0,
+        #163666 4px 4px 0,
+        #163666 4.5px 4.5px 0 !important;
+    transform: translate(-1px, -1px) !important;
+}
+
+/* Suppress the app-level yellow focus treatment inside the booking flow. */
+.booking-widget button:focus,
+.booking-widget button:focus-visible,
+.booking-widget form input:focus,
+.booking-widget form input:focus-visible,
+.booking-widget form textarea:focus,
+.booking-widget form textarea:focus-visible {
+    outline: none !important;
+    outline-offset: 0 !important;
+}
+
+.booking-widget form input:focus,
+.booking-widget form input:focus-visible,
+.booking-widget form textarea:focus,
+.booking-widget form textarea:focus-visible {
+    border-color: #163666 !important;
+    box-shadow: none !important;
+}
+
+.booking-widget .rr-button:hover,
+.booking-widget .rr-button:active {
+    outline: 3px solid #455e84 !important;
+    outline-offset: -3px !important;
+}
+
+.booking-widget .avatar-initials {
+    color: #b2d3de !important;
+    font-family: "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.04em !important;
+}
+
+.booking-widget .available-time-tile.is-selected,
+.booking-widget .available-time-tile.is-selected:hover {
+    color: #b2d3de !important;
+    background: #163666 !important;
+    border: 2px solid #163666 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    font: 700 22px/1 "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif !important;
+}
+
+.booking-widget button.available-time-tile,
+.booking-widget button.available-time-tile:hover,
+.booking-widget button.available-time-tile.is-selected,
+.booking-widget button.available-time-tile.is-selected:hover {
+    border: 2px solid #163666 !important;
+}
+
+.booking-widget .available-time-tile,
+.booking-widget .available-time-tile.is-selected,
+.booking-widget .available-time-tile.is-selected:hover,
+.booking-widget .unavailable-time-tile {
+    min-height: 56px;
+    font-size: 18px !important;
+    line-height: 1 !important;
+}
+
+.booking-widget .date-nav-arrow {
+    display: block;
+    width: 14px;
+    height: 14px;
+    fill: #163666;
+}
+
+.booking-widget .date-nav-arrow-previous {
+    transform: rotate(180deg);
+}
+
+.booking-widget form input,
+.booking-widget form textarea {
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+    font-weight: 400 !important;
+}
+
+.booking-widget form input::placeholder,
+.booking-widget form textarea::placeholder {
+    color: #8492a5 !important;
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+    font-weight: 300 !important;
+    opacity: 1;
+}
+
+/* Reservation form final typography guard. */
+.booking-widget form input:not([type="checkbox"]):not([type="radio"]),
+.booking-widget form textarea {
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+    font-weight: 400 !important;
+}
+
+.booking-widget form input:not([type="checkbox"]):not([type="radio"])::placeholder,
+.booking-widget form textarea::placeholder {
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+    font-weight: 300 !important;
+}
+
+.booking-widget .rr-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: "Khand", sans-serif !important;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #b2d3de !important;
+    background-color: #163666 !important;
+    padding: 1.25rem 1.15rem;
+    border: 3px solid #163666 !important;
+    border-radius: 2px !important;
+    text-decoration: none;
+    box-shadow: none !important;
+    transform: none !important;
+    opacity: 1;
+}
+
+.booking-widget .rr-button > span,
+.booking-widget .rr-button svg,
+.booking-widget .rr-button path {
+    color: inherit !important;
+    stroke: currentColor !important;
+}
+
+.booking-widget .rr-button > span:last-child {
+    background: transparent !important;
+}
+
+.booking-widget .rr-button .rr-button-icon,
+.booking-widget .rr-button .rr-button-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.booking-widget .rr-button .rr-button-icon svg,
+.booking-widget .rr-button .rr-button-icon path {
+    fill: currentColor !important;
+    stroke: none !important;
+}
+
+.booking-widget .rr-button:hover {
+    color: #163666 !important;
+    background-color: #b2d3de !important;
+    outline: 3px solid #455e84;
+    outline-offset: -3px;
+    box-shadow:
+        #163666 0.5px 0.5px 0,
+        #163666 1px 1px 0,
+        #163666 1.5px 1.5px 0,
+        #163666 2px 2px 0,
+        #163666 2.5px 2.5px 0,
+        #163666 3px 3px 0,
+        #163666 3.5px 3.5px 0,
+        #163666 4px 4px 0,
+        #163666 4.5px 4.5px 0,
+        #163666 5px 5px 0,
+        #163666 5.5px 5.5px 0,
+        #163666 6px 6px 0,
+        #163666 6.5px 6.5px 0,
+        #163666 7px 7px 0,
+        #163666 7.5px 7.5px 0,
+        #163666 8px 8px 0,
+        #163666 8.5px 8.5px 0 !important;
+    transform: translate(-4px, -4px) !important;
+}
+
+.booking-widget .rr-button:active {
+    outline: 3px solid #455e84;
+    outline-offset: -3px;
+    box-shadow:
+        #163666 0.5px 0.5px 0,
+        #163666 1px 1px 0,
+        #163666 1.5px 1.5px 0,
+        #163666 2px 2px 0,
+        #163666 2.5px 2.5px 0,
+        #163666 3px 3px 0,
+        #163666 3.5px 3.5px 0,
+        #163666 4px 4px 0,
+        #163666 4.5px 4.5px 0 !important;
+    transform: translate(-1px, -1px) !important;
+}
+
+.booking-widget .rr-button:disabled {
+    cursor: not-allowed;
+    outline: none;
+    box-shadow: none !important;
+    opacity: 0.5 !important;
+}
+
+.booking-widget button.available-date-tile.is-selected,
+.booking-widget button.available-date-tile.is-selected:hover {
+    color: #b2d3de !important;
+    background: #163666 !important;
+    border: 2px solid #163666 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* Confirmation final cascade guards. */
+.booking-widget.is-confirmation-view .confirmation-layout {
+    padding-top: 68px;
+    padding-bottom: 62px;
+}
+
+.booking-widget.is-confirmation-view .confirmation-intro {
+    color: #35b8c5 !important;
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+    font-weight: 300 !important;
+}
+
+.booking-widget.is-confirmation-view .confirmation-message,
+.booking-widget.is-confirmation-view .confirmation-message strong {
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+    font-weight: 400 !important;
+}
+
+@media (max-width: 640px) {
+    .booking-widget.is-confirmation-view .confirmation-layout {
+        padding-top: 42px;
+        padding-bottom: 48px;
     }
 }

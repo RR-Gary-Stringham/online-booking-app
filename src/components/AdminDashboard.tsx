@@ -268,7 +268,7 @@ export default function AdminDashboard({
   }, [settings.colorTheme]);
 
   return (
-    <div className="w-full bg-white rounded-3xl border border-dark-blue shadow-xl overflow-hidden min-h-[580px] grid grid-cols-1 lg:grid-cols-12">
+    <div className="admin-workspace w-full bg-white rounded-3xl border border-dark-blue shadow-xl overflow-hidden min-h-[580px] grid grid-cols-1 lg:grid-cols-12">
       
       {/* Side navigational rail */}
       <div className="lg:col-span-3 bg-slate-50 border-r border-slate-100 p-6 flex flex-col justify-between">
