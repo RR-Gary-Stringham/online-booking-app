@@ -382,7 +382,7 @@ export default function ClientWidget({
               />
             ) : (
               <div className="avatar-initials w-10 h-10 rounded-full bg-[var(--primary)] flex items-center justify-center shadow-sm uppercase">
-                {displayName ? displayName.split(' ').map((n) => n[0]).join('') : 'R'}
+                {displayName ? displayName.split(' ').map((n: string) => n[0]).join('') : 'R'}
               </div>
             )}
             <div>

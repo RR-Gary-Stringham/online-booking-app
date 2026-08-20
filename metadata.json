@@ -1,6 +1,0 @@
-{
-  "name": "Meeting Booking Widget",
-  "description": "An embeddable website widget and management dashboard for sharing availability and booking meetings.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

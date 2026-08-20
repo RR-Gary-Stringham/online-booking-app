@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import ClientWidget from './components/ClientWidget';
 import AdminDashboard from './components/AdminDashboard';
@@ -213,7 +215,6 @@ export default function App() {
             providerName: data.settings.name,
             meetingDuration: durationMinutes,
             referenceId: bookingId,
-            brevoApiKey: data.settings.brevoApiKey,
             brevoSenderEmail: data.settings.brevoSenderEmail,
             brevoSenderName: data.settings.brevoSenderName,
             customNotes: newBookingData.clientNotes,
@@ -256,7 +257,7 @@ export default function App() {
   }
 
   return (
-    <div className="bg-slate-50/50 min-h-screen font-sans selection:bg-slate-800 selection:text-white flex flex-col justify-between">
+    <div className="app-shell bg-slate-50/50 min-h-screen font-sans selection:bg-slate-800 selection:text-white flex flex-col justify-between">
       
       {/* Dynamic Selector Header */}
       <header className="bg-white border-b border-slate-100 py-3.5 px-6 shadow-xs sticky top-0 z-50">
