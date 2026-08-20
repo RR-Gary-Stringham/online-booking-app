@@ -5,6 +5,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Khand:wght@300;400;500;600;700&family=Jost:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
 @import "tailwindcss";
 
+.app-shell {
+    background: #eff5f6 !important;
+}
+
 @theme {
 
     /* Fonts */
@@ -2057,6 +2061,11 @@ main > * {
         border-right: 0 !important;
         border-bottom: 2px solid #163666 !important;
     }
+}
+
+/* App-shell final guard keeps the canvas stable across Vite and Next CSS ordering. */
+body .app-shell {
+    background: #eff5f6 !important;
 }
 
 /* REVREBEL provider workspace skin. Administrative behavior remains unchanged. */
