@@ -1,9 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, User, Mail, MessageSquare, CheckCircle, ArrowLeft, Globe, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { WeeklyWorkingDay, MeetingType, Booking, ProviderSettings } from '../types';
 import { CalendarEvent } from '../lib/googleCalendar';
-import { formatLocalDateKey } from '../lib/date';
+import {
+  addDaysToDateKey,
+  browserTimeZone,
+  formatDateKeyInTimeZone,
+  formatLocalDateKey,
+  formatTimeInTimeZone,
+  supportedTimeZones,
+  weekdayForDateKey,
+  zonedDateTimeToUtc,
+} from '../lib/date';
 
 interface ClientWidgetProps {
   settings: ProviderSettings;
@@ -39,7 +48,10 @@ export default function ClientWidget({
   // Date selection states
   const [selectedDateStr, setSelectedDateStr] = useState<string>(''); // YYYY-MM-DD
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>(''); // HH:MM
+  const [selectedProviderDateStr, setSelectedProviderDateStr] = useState<string>('');
+  const [selectedDisplayTime, setSelectedDisplayTime] = useState<string>('');
   const [windowOffset, setWindowOffset] = useState<number>(0); // Paginate sliding 14-day date bar
+  const [viewerTimeZone, setViewerTimeZone] = useState(settings.timezone);
 
   // Customer form state
   const [clientFirstName, setClientFirstName] = useState('');
@@ -53,6 +65,15 @@ export default function ClientWidget({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recentBookingId, setRecentBookingId] = useState('');
 
+  useEffect(() => {
+    setViewerTimeZone(browserTimeZone());
+  }, []);
+
+  const timeZoneOptions = useMemo(() => {
+    const zones = supportedTimeZones();
+    return zones.includes(viewerTimeZone) ? zones : [viewerTimeZone, ...zones];
+  }, [viewerTimeZone]);
+
   // Active meeting types
   const activeMeetingTypes = useMemo(() => {
     return meetingTypes.filter((mt) => mt.enabled);
@@ -60,10 +81,9 @@ export default function ClientWidget({
 
   // Modern horizontal 14-day list computation starting from the real current date.
   const baseToday = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
-  }, []);
+    const [year, month, day] = formatDateKeyInTimeZone(new Date(), viewerTimeZone).split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }, [viewerTimeZone]);
 
   const todayDateStr = useMemo(() => formatLocalDateKey(baseToday), [baseToday]);
 
@@ -137,92 +157,86 @@ export default function ClientWidget({
   const availableSlotsForSelectedDate = useMemo(() => {
     if (!selectedDateStr || !selectedType) return [];
 
-    const parts = selectedDateStr.split('-');
-    const year = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const dateNum = parseInt(parts[2], 10);
-    const d = new Date(year, month, dateNum);
-
-    const daysMapped = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const dayOfWeekStr = daysMapped[d.getDay()];
-
-    const dayConfig = workingHours.find((wh) => wh.day === dayOfWeekStr);
-    if (!dayConfig || !dayConfig.enabled) return [];
-
-    const [startHour, startMin] = dayConfig.startTime.split(':').map(Number);
-    const [endHour, endMin] = dayConfig.endTime.split(':').map(Number);
-
-    const startMinutes = startHour * 60 + startMin;
-    const endMinutes = endHour * 60 + endMin;
-
     const slotInterval = selectedType.duration;
-    const slots: { time: string; isBooked: boolean; isPast: boolean }[] = [];
+    const slots: {
+      key: string;
+      time: string;
+      providerDate: string;
+      displayTime: string;
+      startTimestamp: number;
+      isBooked: boolean;
+      isPast: boolean;
+    }[] = [];
     const now = new Date();
 
-    for (let min = startMinutes; min + slotInterval <= endMinutes; min += slotInterval) {
-      const h = Math.floor(min / 60);
-      const m = min % 60;
-      const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    // A visitor date can overlap two provider dates at the edges of the world,
+    // so inspect a small provider-date window and retain only matching visitor dates.
+    for (let dayOffset = -2; dayOffset <= 2; dayOffset += 1) {
+      const providerDate = addDaysToDateKey(selectedDateStr, dayOffset);
+      const dayConfig = workingHours.find((wh) => wh.day === weekdayForDateKey(providerDate));
+      if (!dayConfig?.enabled) continue;
 
-      // Check if booked locally
-      let isBooked = bookings.some((b) => 
-        b.date === selectedDateStr && 
-        b.time === timeStr && 
-        b.status !== 'cancelled'
-      );
+      const [startHour, startMin] = dayConfig.startTime.split(':').map(Number);
+      const [endHour, endMin] = dayConfig.endTime.split(':').map(Number);
+      const startMinutes = startHour * 60 + startMin;
+      const endMinutes = endHour * 60 + endMin;
 
-      // Overlap checking with Google Calendar
-      const slotDateObj = new Date(year, month, dateNum, h, m);
-      const slotEndDateObj = new Date(slotDateObj.getTime() + slotInterval * 60 * 1000);
+      for (let min = startMinutes; min + slotInterval <= endMinutes; min += slotInterval) {
+        const h = Math.floor(min / 60);
+        const m = min % 60;
+        const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        const slotDateObj = zonedDateTimeToUtc(providerDate, timeStr, settings.timezone);
+        if (formatDateKeyInTimeZone(slotDateObj, viewerTimeZone) !== selectedDateStr) continue;
+        const slotEndDateObj = new Date(slotDateObj.getTime() + slotInterval * 60 * 1000);
 
-      if (!isBooked && googleEvents && googleEvents.length > 0) {
-        isBooked = googleEvents.some((ge) => {
-          if (!ge.start?.dateTime || !ge.end?.dateTime) {
-            if (ge.start?.date) {
-              return ge.start.date === selectedDateStr;
+        // Stored booking coordinates remain in the provider's timezone.
+        let isBooked = bookings.some((b) =>
+          b.date === providerDate &&
+          b.time === timeStr &&
+          b.status !== 'cancelled'
+        );
+
+        if (!isBooked && googleEvents && googleEvents.length > 0) {
+          isBooked = googleEvents.some((ge) => {
+            if (!ge.start?.dateTime || !ge.end?.dateTime) {
+              if (ge.start?.date) return ge.start.date === providerDate;
+              return false;
             }
-            return false;
-          }
-          const geStart = new Date(ge.start.dateTime);
-          const geEnd = new Date(ge.end.dateTime);
-          return slotDateObj < geEnd && slotEndDateObj > geStart;
+            const geStart = new Date(ge.start.dateTime);
+            const geEnd = new Date(ge.end.dateTime);
+            return slotDateObj < geEnd && slotEndDateObj > geStart;
+          });
+        }
+
+        slots.push({
+          key: `${providerDate}-${timeStr}`,
+          time: timeStr,
+          providerDate,
+          displayTime: formatTimeInTimeZone(slotDateObj, viewerTimeZone),
+          startTimestamp: slotDateObj.getTime(),
+          isBooked,
+          isPast: slotDateObj < now,
         });
       }
-
-      // Prevent booking slots that have already passed in real time.
-      const isPast = slotDateObj < now;
-
-      slots.push({
-        time: timeStr,
-        isBooked,
-        isPast,
-      });
     }
 
-    return slots;
-  }, [selectedDateStr, selectedType, workingHours, bookings, googleEvents]);
-
-  // Format 24h time format (e.g. "13:30") to custom elegant 12h format ("01:30 PM")
-  const formatTime12h = (time24: string) => {
-    if (!time24) return '';
-    const [hStr, mStr] = time24.split(':');
-    const h = parseInt(hStr, 10);
-    const m = parseInt(mStr, 10);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const h12 = h % 12 === 0 ? 12 : h % 12;
-    return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
-  };
+    return slots.sort((a, b) => a.startTimestamp - b.startTimestamp);
+  }, [selectedDateStr, selectedType, workingHours, bookings, googleEvents, settings.timezone, viewerTimeZone]);
 
   const selectMeetingType = (type: MeetingType) => {
     setSelectedType(type);
     setSelectedDateStr('');
     setSelectedTimeSlot('');
+    setSelectedProviderDateStr('');
+    setSelectedDisplayTime('');
   };
 
   const handleSelectDate = (dateStr: string, isWorking: boolean) => {
     if (!isWorking) return;
     setSelectedDateStr(dateStr);
     setSelectedTimeSlot('');
+    setSelectedProviderDateStr('');
+    setSelectedDisplayTime('');
   };
 
   const handleSubmitBooking = (e: React.FormEvent) => {
@@ -256,8 +270,10 @@ export default function ClientWidget({
         clientName,
         clientEmail,
         clientNotes: bookingNotes,
-        date: selectedDateStr,
+        date: selectedProviderDateStr,
         time: selectedTimeSlot,
+        clientTimezone: viewerTimeZone,
+        providerTimezone: settings.timezone,
       });
       setIsSubmitting(false);
       setStep('success');
@@ -269,6 +285,8 @@ export default function ClientWidget({
     setSelectedType(null);
     setSelectedDateStr('');
     setSelectedTimeSlot('');
+    setSelectedProviderDateStr('');
+    setSelectedDisplayTime('');
     setClientFirstName('');
     setClientLastName('');
     setClientEmail('');
@@ -569,32 +587,36 @@ export default function ClientWidget({
                   ) : (
                     <div className="time-slots-grid grid grid-cols-2 md:grid-cols-5 gap-3">
                       {availableSlotsForSelectedDate.map((slot) => {
-                        const isSelected = selectedTimeSlot === slot.time;
+                        const isSelected = selectedTimeSlot === slot.time && selectedProviderDateStr === slot.providerDate;
                         
                         if (slot.isBooked || slot.isPast) {
                           return (
                             <div
-                              key={slot.time}
+                              key={slot.key}
                               className="unavailable-time-tile py-3 text-center cursor-not-allowed select-none opacity-60"
                             >
-                              {formatTime12h(slot.time)}
+                              {slot.displayTime}
                             </div>
                           );
                         }
 
                         return (
                           <button
-                            key={slot.time}
-                            id={`slot-btn-${slot.time}`}
+                            key={slot.key}
+                            id={`slot-btn-${slot.key}`}
                             disabled={slot.isBooked || slot.isPast}
-                            onClick={() => setSelectedTimeSlot(slot.time)}
+                            onClick={() => {
+                              setSelectedTimeSlot(slot.time);
+                              setSelectedProviderDateStr(slot.providerDate);
+                              setSelectedDisplayTime(slot.displayTime);
+                            }}
                             className={`available-time-tile py-3 border text-center cursor-pointer transition-all duration-300 ease-fluid
                               ${isSelected
                                 ? 'is-selected bg-[var(--primary)] border-[var(--primary)] text-[var(--primary-foreground)]'
                                 : 'border-slate-200 bg-white text-stone-850 hover:border-[var(--primary)]/55 hover:bg-stone-50/50'
                               }`}
                           >
-                            {formatTime12h(slot.time)}
+                            {slot.displayTime}
                           </button>
                         );
                       })}
@@ -692,8 +714,25 @@ export default function ClientWidget({
                 </motion.section>
               )}
 
-              <footer className="text-[10px] text-stone-400 font-medium font-eyebrow mt-12 flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 pt-4 gap-2">
-                <span>Timezone: <strong>{settings.timezone}</strong></span>
+              <footer className="timezone-control text-[10px] text-stone-400 font-medium font-eyebrow mt-12 flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 pt-4 gap-2">
+                <label htmlFor="viewer-timezone">Time zone</label>
+                <select
+                  id="viewer-timezone"
+                  value={viewerTimeZone}
+                  onChange={(event) => {
+                    setViewerTimeZone(event.target.value);
+                    setWindowOffset(0);
+                    setSelectedDateStr('');
+                    setSelectedTimeSlot('');
+                    setSelectedProviderDateStr('');
+                    setSelectedDisplayTime('');
+                  }}
+                  aria-label="Display timezone"
+                >
+                  {timeZoneOptions.map((timeZone) => (
+                    <option key={timeZone} value={timeZone}>{timeZone.replaceAll('_', ' ')}</option>
+                  ))}
+                </select>
               </footer>
 
             </motion.div>
@@ -718,7 +757,7 @@ export default function ClientWidget({
               <div className="confirmation-details">
                 <p className="confirmation-intro">
                   Your meeting with {displayName} is officially locked in for<br />
-                  {formattedSelectedDate} at {formatTime12h(selectedTimeSlot)} ({settings.timezone}).
+                  {formattedSelectedDate} at {selectedDisplayTime} ({viewerTimeZone.replaceAll('_', ' ')}).
                 </p>
                 <button
                   onClick={resetFlow}

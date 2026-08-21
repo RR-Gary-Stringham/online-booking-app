@@ -10,7 +10,7 @@ const DEFAULT_SETTINGS: ProviderSettings = {
   email: 'gary@revrebel.io',
   businessName: 'Rev Rebel Strategy',
   welcomeMessage: 'Welcome! Browse my real-time availability below and schedule a 1:1 strategy session with me in minutes. Once booked, we\'ll automatically generate your calendar link.',
-  timezone: 'America/New_York',
+  timezone: 'America/Los_Angeles',
   colorTheme: 'revrebel',
   brevoApiKey: '',
   brevoSenderEmail: 'notifications@revrebel.io',
@@ -62,44 +62,14 @@ const DEFAULT_MEETING_TYPES: MeetingType[] = [
   },
 ];
 
-// Seed initial bookings for a live dashboard feel (2026-06-08 is current date)
-const getInitialBookings = (): Booking[] => {
-  return [
-    {
-      id: 'b-1',
-      meetingTypeId: 'mt-1',
-      clientName: 'Sarah Jenkins',
-      clientEmail: 'sarah@innovate.co',
-      clientNotes: 'Would like to go over our Q3 strategy outline and discuss engagement scope.',
-      date: '2026-06-09',
-      time: '10:00',
-      status: 'confirmed',
-      createdAt: '2026-06-08T09:12:00Z',
-    },
-    {
-      id: 'b-2',
-      meetingTypeId: 'mt-2',
-      clientName: 'Marcus Chen',
-      clientEmail: 'marcus@vanguard.dev',
-      clientNotes: 'Exploring migration of our operations backend. Looking to understand timeline and team setup.',
-      date: '2026-06-09',
-      time: '14:30',
-      status: 'pending',
-      createdAt: '2026-06-08T08:30:00Z',
-    },
-    {
-      id: 'b-3',
-      meetingTypeId: 'mt-3',
-      clientName: 'Elena Rostova',
-      clientEmail: 'elena.r@growthlabs.io',
-      clientNotes: 'Monthly agency sync. I\'ll bring the latest conversion rate optimization reports.',
-      date: '2026-06-10',
-      time: '11:00',
-      status: 'confirmed',
-      createdAt: '2026-06-07T14:45:00Z',
-    },
-  ];
-};
+const LEGACY_DEMO_EMAILS = new Set([
+  'sarah@innovate.co',
+  'marcus@vanguard.dev',
+  'elena.r@growthlabs.io',
+]);
+
+const removeLegacyDemoBookings = (bookings: Booking[]) =>
+  bookings.filter((booking) => !LEGACY_DEMO_EMAILS.has(booking.clientEmail));
 
 export interface FullWidgetData {
   settings: ProviderSettings;
@@ -122,6 +92,10 @@ export const loadWidgetData = (): FullWidgetData => {
       ...DEFAULT_SETTINGS,
       ...(parsedSettings.settings || {}),
     };
+    // Remove the original demo default from existing browser storage.
+    if (settings.timezone === 'America/New_York') {
+      settings.timezone = 'America/Los_Angeles';
+    }
 
     const workingHours: WeeklyWorkingDay[] = 
       parsedSettings.workingHours || DEFAULT_WORKING_HOURS;
@@ -129,9 +103,11 @@ export const loadWidgetData = (): FullWidgetData => {
     const meetingTypes: MeetingType[] = 
       parsedSettings.meetingTypes || DEFAULT_MEETING_TYPES;
 
-    const bookings: Booking[] = bookingsRaw 
-      ? JSON.parse(bookingsRaw) 
-      : getInitialBookings();
+    const storedBookings: Booking[] = bookingsRaw ? JSON.parse(bookingsRaw) : [];
+    const bookings = removeLegacyDemoBookings(storedBookings);
+    if (bookings.length !== storedBookings.length) {
+      localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(bookings));
+    }
 
     return { settings, workingHours, meetingTypes, bookings };
   } catch (error) {
@@ -140,7 +116,7 @@ export const loadWidgetData = (): FullWidgetData => {
       settings: DEFAULT_SETTINGS,
       workingHours: DEFAULT_WORKING_HOURS,
       meetingTypes: DEFAULT_MEETING_TYPES,
-      bookings: getInitialBookings(),
+      bookings: [],
     };
   }
 };

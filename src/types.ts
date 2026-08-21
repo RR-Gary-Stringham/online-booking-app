@@ -24,6 +24,8 @@ export interface Booking {
   time: string; // "HH:MM"
   status: 'pending' | 'confirmed' | 'cancelled';
   createdAt: string; // ISO string
+  clientTimezone?: string;
+  providerTimezone?: string;
 }
 
 export interface ProviderSettings {
