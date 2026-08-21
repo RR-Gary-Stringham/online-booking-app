@@ -16,7 +16,7 @@ export async function GET() {
       maxAge: 10 * 60,
     });
     return response;
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Google OAuth is unavailable.' }, { status: 503 });
+  } catch {
+    return NextResponse.json({ error: 'Google Calendar connection is unavailable.' }, { status: 503 });
   }
 }
