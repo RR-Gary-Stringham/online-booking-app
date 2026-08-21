@@ -59,7 +59,9 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
     // Detect embed flag on mount
     const checkEmbed = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      setIsEmbedMode(urlParams.get('embed') === 'true');
+      const embedMode = urlParams.get('embed') === 'true';
+      setIsEmbedMode(embedMode);
+      if (embedMode) setViewMode('preview');
     };
     
     checkEmbed();
@@ -172,7 +174,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
     <div className="app-shell bg-slate-50/50 min-h-screen font-sans selection:bg-slate-800 selection:text-white flex items-center">
       <main className={`max-w-6xl w-full mx-auto flex flex-col justify-center ${isEmbedMode ? 'p-1' : 'p-4 md:p-8'}`}>
         <AnimatePresence mode="wait">
-          {viewMode === 'preview' ? (
+          {viewMode === 'preview' || isEmbedMode ? (
             <motion.div
               key="widget-preview"
               initial={{ opacity: 0, scale: 0.99 }}
@@ -189,7 +191,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
                 googleEvents={googleEvents}
                 googleUser={googleUser}
                 isEmbedPreview={isEmbedMode}
-                onOpenProviderWorkspace={() => setViewMode('admin')}
+                onOpenProviderWorkspace={isEmbedMode ? undefined : () => setViewMode('admin')}
               />
             </motion.div>
           ) : (

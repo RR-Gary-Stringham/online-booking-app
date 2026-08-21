@@ -22,6 +22,10 @@ function configuredAppUrl() {
     throw new AppUrlConfigurationError('APP_URL must use HTTPS outside local development.');
   }
 
+  if (url.username || url.password) {
+    throw new AppUrlConfigurationError('APP_URL must not include credentials.');
+  }
+
   url.hash = '';
   url.search = '';
   url.pathname = url.pathname.replace(/\/$/, '');
