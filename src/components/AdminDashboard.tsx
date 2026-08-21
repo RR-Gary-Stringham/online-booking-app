@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Calendar as CalendarIcon, Clock, Settings, Save, CheckCircle, XCircle, Trash2, Plus, Info, Copy, ClipboardCheck, ToggleLeft, ToggleRight, Edit, ArrowDown, ExternalLink, Mail, Workflow, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { WeeklyWorkingDay, MeetingType, Booking, ProviderSettings } from '../types';
+import { supportedTimeZones } from '../lib/date';
 
 interface AdminDashboardProps {
   settings: ProviderSettings;
@@ -61,6 +62,7 @@ export default function AdminDashboard({
   const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [testError, setTestError] = useState('');
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
+  const timeZoneOptions = useMemo(() => supportedTimeZones(), []);
 
   // New meeting type form states
   const [showAddType, setShowAddType] = useState(false);
@@ -363,7 +365,9 @@ export default function AdminDashboard({
         <div className="mt-8 pt-4 border-t border-slate-200">
           <div className="flex items-baseline justify-between text-[11px] font-mono text-slate-400">
             <span>Status</span>
-            <span className="text-green font-bold flex items-center gap-1">● Synced</span>
+            <span className={googleToken ? "text-green font-bold flex items-center gap-1" : "font-bold flex items-center gap-1"}>
+              {googleToken ? '● Authorized' : '● Local only'}
+            </span>
           </div>
         </div>
       </div>
@@ -386,7 +390,7 @@ export default function AdminDashboard({
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-xl font-display font-bold text-slate-800">Scheduled Appointments</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">Approve, deny, or manage incoming visitor consultations easily.</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Manage bookings created through this widget.</p>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -404,7 +408,8 @@ export default function AdminDashboard({
               {bookings.length === 0 ? (
                 <div className="p-12 text-center border-2 border-dashed border-slate-100 rounded-2xl text-slate-400">
                   <CalendarIcon className="mx-auto text-slate-300 md:mb-2" size={32} />
-                  <span>No scheduled bookings yet.</span>
+                  <span className="block">No scheduled bookings yet.</span>
+                  <span className="block text-[11px] mt-1">Google Calendar events do not populate this list.</span>
                 </div>
               ) : (
                 <div className="overflow-x-auto rounded-xl border border-slate-100">
@@ -791,6 +796,20 @@ export default function AdminDashboard({
                         value={businessName}
                         onChange={(e) => setBusinessName(e.target.value)}
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Provider Time Zone</label>
+                      <select
+                        id="provider-timezone-input"
+                        className="w-full px-3 py-2 text-xs font-semibold border border-slate-150 rounded-xl focus:outline-none bg-white"
+                        value={timezone}
+                        onChange={(event) => setTimezone(event.target.value)}
+                      >
+                        {timeZoneOptions.map((timeZone) => (
+                          <option key={timeZone} value={timeZone}>{timeZone.replaceAll('_', ' ')}</option>
+                        ))}
+                      </select>
                     </div>
 
                     <div>
@@ -1335,13 +1354,13 @@ function openAdminDialog() {
                             <p className="text-xs text-slate-400 font-mono">{googleUser?.email || 'Connected'}</p>
                             <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-green mt-1 uppercase font-mono">
                               <span className="w-1.5 h-1.5 rounded-full bg-green animate-pulse" />
-                              Live Sync Active
+                              Calendar Authorized
                             </span>
                           </div>
                         </div>
 
                         <p className="text-xs text-slate-500 leading-relaxed">
-                          Your calendar is successfully connected. The live client scheduler will automatically verify your schedule before presenting open slots, preventing double-bookings.
+                          Your Google account is authorized. Live public availability and shared booking records still require server-side token and booking storage.
                         </p>
 
                         {onGoogleLogout && (
@@ -1371,7 +1390,7 @@ function openAdminDialog() {
                         </div>
 
                         <p className="text-xs text-slate-500 leading-relaxed">
-                          Synchronize your availability with Google Calendar. Once connected, client bookings are placed on your calendar instantly, and busy slots are hidden in real-time.
+                          Authorize the provider calendar now. Live availability and event creation become active after shared server storage is connected.
                         </p>
 
                         {onGoogleSignIn && (
@@ -1401,7 +1420,7 @@ function openAdminDialog() {
                         <div>
                           <h5 className="text-xs font-bold text-slate-700">Dynamic Blockout Engine</h5>
                           <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
-                            Reads your primary calendar busy events in real-time to remove slot coordinates from the client's scheduler page dynamically.
+                            Planned: read primary-calendar busy periods server-side and remove conflicting public slots.
                           </p>
                         </div>
                       </div>
@@ -1411,7 +1430,7 @@ function openAdminDialog() {
                         <div>
                           <h5 className="text-xs font-bold text-slate-700">Instant Invites & Notifications</h5>
                           <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
-                            Sends calendar invitations containing description summaries, joining options, and alignment details to both you and your client.
+                            Planned: create the calendar event and send an invitation after a booking is confirmed.
                           </p>
                         </div>
                       </div>

@@ -2005,6 +2005,36 @@ main > * {
     transform: none !important;
 }
 
+.booking-widget .timezone-control {
+    color: #163666 !important;
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 400 !important;
+}
+
+.booking-widget .timezone-control label {
+    color: #163666 !important;
+    text-transform: none;
+}
+
+.booking-widget .timezone-control select {
+    max-width: min(100%, 280px);
+    color: #163666 !important;
+    background-color: transparent !important;
+    border: 1px solid #163666 !important;
+    border-radius: 2px !important;
+    padding: 0.5rem 2rem 0.5rem 0.65rem;
+    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 400 !important;
+    cursor: pointer;
+}
+
+.booking-widget .timezone-control select:focus-visible {
+    outline: 2px solid #455e84 !important;
+    outline-offset: 2px;
+}
+
 /* Confirmation cascade guards: keep the reference palette and compact proportions. */
 .booking-widget.is-confirmation-view .confirmation-layout {
     padding-top: 68px;
