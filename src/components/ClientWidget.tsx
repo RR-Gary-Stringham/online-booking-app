@@ -3,6 +3,7 @@ import { Calendar as CalendarIcon, Clock, User, Mail, MessageSquare, CheckCircle
 import { motion, AnimatePresence } from 'motion/react';
 import { WeeklyWorkingDay, MeetingType, Booking, ProviderSettings } from '../types';
 import { CalendarEvent } from '../lib/googleCalendar';
+import { formatLocalDateKey } from '../lib/date';
 
 interface ClientWidgetProps {
   settings: ProviderSettings;
@@ -57,8 +58,14 @@ export default function ClientWidget({
     return meetingTypes.filter((mt) => mt.enabled);
   }, [meetingTypes]);
 
-  // Modern horizontal 14-day list computation starting from today (June 8, 2026)
-  const baseToday = useMemo(() => new Date(2026, 5, 8), []); // June 8th, 2026
+  // Modern horizontal 14-day list computation starting from the real current date.
+  const baseToday = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  }, []);
+
+  const todayDateStr = useMemo(() => formatLocalDateKey(baseToday), [baseToday]);
 
   const rowDays = useMemo(() => {
     const days: {
@@ -150,6 +157,7 @@ export default function ClientWidget({
 
     const slotInterval = selectedType.duration;
     const slots: { time: string; isBooked: boolean; isPast: boolean }[] = [];
+    const now = new Date();
 
     for (let min = startMinutes; min + slotInterval <= endMinutes; min += slotInterval) {
       const h = Math.floor(min / 60);
@@ -181,12 +189,8 @@ export default function ClientWidget({
         });
       }
 
-      // Check if slot is in the past (Current simulation datetime: 2026-06-08 10:55)
-      let isPast = false;
-      const systemToday = new Date(2026, 5, 8, 10, 55);
-      if (slotDateObj < systemToday) {
-        isPast = true;
-      }
+      // Prevent booking slots that have already passed in real time.
+      const isPast = slotDateObj < now;
 
       slots.push({
         time: timeStr,
@@ -487,7 +491,7 @@ export default function ClientWidget({
                   <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-14 gap-2.5 md:gap-2">
                     {rowDays.map((d) => {
                       const isSelected = selectedDateStr === d.dateStr;
-                      const isToday = d.dateStr === '2026-06-08';
+                      const isToday = d.dateStr === todayDateStr;
                       const displayDateLabel = String(d.dateLabel).padStart(2, '0');
 
                       // If weekend (Sat, Sun), show blended dotted background

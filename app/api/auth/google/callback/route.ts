@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
+  GoogleOAuthConfigurationError,
   GOOGLE_OAUTH_COOKIE,
   GOOGLE_OAUTH_STATE_COOKIE,
   encryptGoogleSession,
@@ -14,6 +15,13 @@ function redirectWithClearedState(url: URL) {
   return response;
 }
 
+function googleErrorRedirect(appUrl: URL, reason: 'invalid-state' | 'configuration' | 'unexpected') {
+  appUrl.searchParams.set('google', 'error');
+  appUrl.searchParams.set('retry', 'connect-calendar');
+  appUrl.searchParams.set('reason', reason);
+  return redirectWithClearedState(appUrl);
+}
+
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code');
   const state = request.nextUrl.searchParams.get('state');
@@ -21,9 +29,7 @@ export async function GET(request: NextRequest) {
   const appUrl = new URL('/app?google=connected', request.url);
 
   if (!code || !state || !expectedState || state !== expectedState) {
-    appUrl.searchParams.set('google', 'error');
-    appUrl.searchParams.set('retry', 'connect-calendar');
-    return redirectWithClearedState(appUrl);
+    return googleErrorRedirect(appUrl, 'invalid-state');
   }
 
   try {
@@ -39,9 +45,12 @@ export async function GET(request: NextRequest) {
     response.cookies.delete(GOOGLE_OAUTH_STATE_COOKIE);
     return response;
   } catch (error) {
+    if (error instanceof GoogleOAuthConfigurationError) {
+      console.warn('[google-oauth] Callback configuration is incomplete.', error.message);
+      return googleErrorRedirect(appUrl, 'configuration');
+    }
+
     console.error('[google-oauth] Authorization callback failed.', error);
-    appUrl.searchParams.set('google', 'error');
-    appUrl.searchParams.set('retry', 'connect-calendar');
-    return redirectWithClearedState(appUrl);
+    return googleErrorRedirect(appUrl, 'unexpected');
   }
 }
