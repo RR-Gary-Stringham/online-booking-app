@@ -19,14 +19,20 @@ interface GoogleTokenResponse {
   token_type: string;
 }
 
-function requireEnv(name: 'GOOGLE_CLIENT_ID' | 'GOOGLE_CLIENT_SECRET' | 'GOOGLE_REDIRECT_URI') {
+function requireEnv(
+  name:
+    | 'GOOGLE_CLIENT_ID'
+    | 'GOOGLE_CLIENT_SECRET'
+    | 'GOOGLE_REDIRECT_URI'
+    | 'TOKEN_ENCRYPTION_KEY',
+) {
   const value = process.env[name];
   if (!value) throw new Error(`${name} is not configured.`);
   return value;
 }
 
 function encryptionKey() {
-  const source = process.env.TOKEN_ENCRYPTION_KEY || requireEnv('GOOGLE_CLIENT_SECRET');
+  const source = requireEnv('TOKEN_ENCRYPTION_KEY');
   return createHash('sha256').update(source).digest();
 }
 

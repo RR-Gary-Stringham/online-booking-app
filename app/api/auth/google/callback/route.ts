@@ -16,7 +16,9 @@ export async function GET(request: NextRequest) {
 
   if (!code || !state || !expectedState || state !== expectedState) {
     appUrl.searchParams.set('google', 'error');
-    return NextResponse.redirect(appUrl);
+    const response = NextResponse.redirect(appUrl);
+    response.cookies.delete(GOOGLE_OAUTH_STATE_COOKIE);
+    return response;
   }
 
   try {
@@ -33,6 +35,8 @@ export async function GET(request: NextRequest) {
     return response;
   } catch {
     appUrl.searchParams.set('google', 'error');
-    return NextResponse.redirect(appUrl);
+    const response = NextResponse.redirect(appUrl);
+    response.cookies.delete(GOOGLE_OAUTH_STATE_COOKIE);
+    return response;
   }
 }

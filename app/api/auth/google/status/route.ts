@@ -13,6 +13,6 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE() {
   const response = NextResponse.json({ connected: false });
-  response.cookies.set(GOOGLE_OAUTH_COOKIE, '', { httpOnly: true, path: '/', maxAge: 0 });
+  response.cookies.delete(GOOGLE_OAUTH_COOKIE);
   return response;
 }
