@@ -6,6 +6,7 @@ import {
   GOOGLE_OAUTH_STATE_COOKIE,
   googleAuthorizationUrl,
 } from '@/src/lib/google-oauth-server';
+import { AppUrlConfigurationError } from '@/src/lib/app-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +26,7 @@ export async function GET() {
     });
     return response;
   } catch (error) {
-    if (error instanceof GoogleOAuthConfigurationError) {
+    if (error instanceof GoogleOAuthConfigurationError || error instanceof AppUrlConfigurationError) {
       console.warn('[google-oauth] Authorization is not configured.', error.message);
       return NextResponse.json(
         { error: 'Google Calendar connection is not configured.' },

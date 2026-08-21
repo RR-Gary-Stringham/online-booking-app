@@ -2035,6 +2035,54 @@ main > * {
     outline-offset: 2px;
 }
 
+.rr-google-nav-wrap {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.rr-google-nav-wrap-admin {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    margin-top: 0;
+    z-index: 10;
+}
+
+.rr-google-nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    color: #163666;
+    background: transparent;
+    border: 0;
+    border-radius: 2px;
+    cursor: pointer;
+    opacity: 0.72;
+    transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.rr-google-nav svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+}
+
+.rr-google-nav:hover,
+.rr-google-nav:focus-visible {
+    color: #163666;
+    opacity: 1;
+    transform: translateY(-1px);
+}
+
+.rr-google-nav:focus-visible {
+    outline: 2px solid #455e84 !important;
+    outline-offset: 2px;
+}
+
 /* Confirmation cascade guards: keep the reference palette and compact proportions. */
 .booking-widget.is-confirmation-view .confirmation-layout {
     padding-top: 68px;

@@ -1,0 +1,36 @@
+# REVREBEL Online Booking App
+
+> A branded Next.js booking application for Webflow Cloud with Google Calendar OAuth, portable embeds, provider configuration, and planned Webflow CMS-backed public booking pages.
+
+`APP_URL` is the canonical application base URL. All application links, generated iframe sources, and Google OAuth callback URLs must derive from it so deployments can move between Webflow staging and REVREBEL production without code changes. `BOOKING_CALENDAR_API_KEY` is this application's server-only Webflow credential; browser code must never receive it, Google OAuth credentials, or token-encryption keys.
+
+The current frontend retains some provider, meeting-template, and booking state in browser storage. Persistent server storage must become the source of truth before automated provider activation and Webflow CMS synchronization are production-ready.
+
+## Documentation
+
+- [Booking page and URL contract](docs/booking-pages.md): Canonical `APP_URL` behavior and the Webflow CMS field mapping for provider and meeting-template pages.
+
+## Application Entry Points
+
+- [Application page](app/page.tsx): Server entry point that supplies the canonical public application URL to the client application.
+- [Client application](src/App.tsx): Booking and Provider Workspace view orchestration and application API requests.
+- [Provider workspace](src/components/AdminDashboard.tsx): Provider configuration, calendar connection, and generated embed code.
+- [Booking widget](src/components/ClientWidget.tsx): Public scheduling flow, timezone selection, availability, and booking form.
+
+## Server Integration
+
+- [Application URL helper](src/lib/app-url.ts): Validates `APP_URL` and constructs absolute URLs beneath its deployment mount path.
+- [Google OAuth server library](src/lib/google-oauth-server.ts): Server-only authorization, token exchange, refresh, and encrypted session handling.
+- [Google OAuth callback](app/api/auth/google/callback/route.ts): Validates OAuth state and returns providers to the canonical application URL.
+- [Availability API](app/api/availability/route.ts): Boundary for live provider availability.
+
+## Configuration
+
+- [Environment variable template](.env.example): Canonical application URL, Google OAuth, encryption, email, and Webflow CMS configuration.
+- [Next.js configuration](next.config.ts): Framework and local development configuration.
+- [TypeScript configuration](tsconfig.json): Compiler settings and source aliases.
+
+## Optional
+
+- [Local storage model](src/lib/storage.ts): Transitional browser persistence and default provider scheduling data.
+- [Booking types](src/types.ts): Shared provider, meeting-template, schedule, and booking interfaces.
