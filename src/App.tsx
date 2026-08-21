@@ -7,8 +7,12 @@ import { loadWidgetData, saveWidgetData, FullWidgetData } from './lib/storage';
 import { Booking, MeetingType, ProviderSettings, WeeklyWorkingDay } from './types';
 import { Globe, ShieldAlert, Sparkles, Layout, Settings as SettingsIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { initAuth, googleSignIn, logout } from './lib/firebaseAuth';
-import { fetchGoogleEvents, insertGoogleEvent, CalendarEvent } from './lib/googleCalendar';
+import type { CalendarEvent } from './lib/googleCalendar';
+
+const appApiPath = (path: string) =>
+  typeof window !== 'undefined' && window.location.pathname.startsWith('/app')
+    ? `/app${path}`
+    : path;
 
 export default function App() {
   // Check if iframe rendering mode
@@ -26,52 +30,29 @@ export default function App() {
   const [googleEvents, setGoogleEvents] = useState<CalendarEvent[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
 
-  // Synchronize Google Auth session on mount
+  // Read only non-sensitive connection metadata. OAuth tokens remain in an
+  // encrypted, HTTP-only server cookie and are never exposed to this client.
   useEffect(() => {
-    const unsubscribe = initAuth(
-      (user, token) => {
-        setGoogleToken(token);
-        setGoogleUser(user);
-      },
-      () => {
+    setIsLoadingEvents(true);
+    fetch(appApiPath('/api/auth/google/status'), { cache: 'no-store' })
+      .then((response) => response.json())
+      .then((status) => {
+        setGoogleToken(status.connected ? 'server-session' : null);
+        setGoogleUser(status.user ?? null);
+      })
+      .catch(() => {
         setGoogleToken(null);
         setGoogleUser(null);
-      }
-    );
-    return () => unsubscribe();
+      })
+      .finally(() => setIsLoadingEvents(false));
   }, []);
 
-  // Fetch Google Calendar events when authenticated
-  useEffect(() => {
-    if (googleToken) {
-      setIsLoadingEvents(true);
-      fetchGoogleEvents(googleToken, "2026-06-08T00:00:00Z")
-        .then((events) => {
-          setGoogleEvents(events);
-        })
-        .catch((err) => console.error("Could not fetch google events:", err))
-        .finally(() => {
-          setIsLoadingEvents(false);
-        });
-    } else {
-      setGoogleEvents([]);
-    }
-  }, [googleToken]);
-
   const handleGoogleSignIn = async () => {
-    try {
-      const res = await googleSignIn();
-      if (res) {
-        setGoogleToken(res.accessToken);
-        setGoogleUser(res.user);
-      }
-    } catch (err) {
-      console.error("Google auth sign-in error:", err);
-    }
+    window.location.assign(appApiPath('/api/auth/google/connect'));
   };
 
   const handleGoogleLogout = async () => {
-    await logout();
+    await fetch(appApiPath('/api/auth/google/status'), { method: 'DELETE' });
     setGoogleToken(null);
     setGoogleUser(null);
     setGoogleEvents([]);
@@ -135,51 +116,6 @@ export default function App() {
     };
     setData(updated);
     saveWidgetData(updated);
-
-    // Call live Google Calendar insertion in real-time if authenticated
-    if (googleToken) {
-      try {
-        const [hourStr, minStr] = newBookingData.time.split(':');
-        const starthour = parseInt(hourStr, 10);
-        const startmin = parseInt(minStr, 10);
-        
-        // Build local date
-        const parts = newBookingData.date.split('-');
-        const yearObj = parseInt(parts[0], 10);
-        const monthObj = parseInt(parts[1], 10) - 1;
-        const dateObjNum = parseInt(parts[2], 10);
-        const startDate = new Date(yearObj, monthObj, dateObjNum, starthour, startmin, 0);
-        
-        const meetingType = data.meetingTypes.find((t) => t.id === newBookingData.meetingTypeId);
-        const durationMinutes = meetingType ? meetingType.duration : 15;
-        const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
-
-        // Helper to format in ISO format safely without offset suffix so Google configures it using timezone parameter
-        const formatToIsoNoZ = (d: Date) => {
-          const pad = (n: number) => String(n).padStart(2, '0');
-          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-        };
-
-        const startTimeIso = formatToIsoNoZ(startDate);
-        const endTimeIso = formatToIsoNoZ(endDate);
-
-        await insertGoogleEvent(googleToken, {
-          summary: `${meetingType ?  meetingType.name : 'Consultation'}: ${newBookingData.clientName}`,
-          description: `Meeting Booking Details:\n- Professional: ${data.settings.name}\n- Category: ${meetingType ? meetingType.name : 'Consultation'}\n- Duration: ${durationMinutes} Minutes\n- Client Email: ${newBookingData.clientEmail}\n- Description/Notes: ${newBookingData.clientNotes || 'No notes left.'}\n\nThis appointment was registered via Rev Rebel Live Scheduler.`,
-          startTimeIso,
-          endTimeIso,
-          timezone: data.settings.timezone || 'America/New_York',
-          clientEmail: newBookingData.clientEmail,
-          clientName: newBookingData.clientName,
-        });
-
-        // Pull events from active calendar to update slots in real-time
-        const refreshedEvents = await fetchGoogleEvents(googleToken, "2026-06-08T00:00:00Z");
-        setGoogleEvents(refreshedEvents);
-      } catch (err) {
-        console.error("Failed to automatically insert event into Google Calendar:", err);
-      }
-    }
 
     // Dispatch beautiful branded notifications in real-time if Brevo API is configured
     if (data.settings.brevoApiKey) {
