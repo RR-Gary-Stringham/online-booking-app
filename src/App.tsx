@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ClientWidget from './components/ClientWidget';
 import AdminDashboard from './components/AdminDashboard';
 import { loadWidgetData, saveWidgetData, FullWidgetData } from './lib/storage';
@@ -29,6 +29,10 @@ export default function App() {
   const [googleUser, setGoogleUser] = useState<any | null>(null);
   const [googleEvents, setGoogleEvents] = useState<CalendarEvent[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const systemTimeLabel = useMemo(
+    () => `${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`,
+    [],
+  );
 
   // Read only non-sensitive connection metadata. OAuth tokens remain in an
   // encrypted, HTTP-only server cookie and are never exposed to this client.
@@ -317,7 +321,7 @@ export default function App() {
             Meeting Booking Widget • Designed for high fidelity website embeds.
           </div>
           <div className="text-[10px] text-slate-400 font-mono">
-            System local time: <span className="text-slate-600 font-semibold">2026-06-08 10:55 UTC</span>
+            System local time: <span className="text-slate-600 font-semibold">{systemTimeLabel}</span>
           </div>
         </div>
       </footer>
