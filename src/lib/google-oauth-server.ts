@@ -19,6 +19,13 @@ interface GoogleTokenResponse {
   token_type: string;
 }
 
+export class GoogleOAuthConfigurationError extends Error {
+  constructor(variableName: string) {
+    super(`Required Google OAuth configuration is missing: ${variableName}.`);
+    this.name = 'GoogleOAuthConfigurationError';
+  }
+}
+
 function requireEnv(
   name:
     | 'GOOGLE_CLIENT_ID'
@@ -27,8 +34,15 @@ function requireEnv(
     | 'TOKEN_ENCRYPTION_KEY',
 ) {
   const value = process.env[name];
-  if (!value) throw new Error(`${name} is not configured.`);
+  if (!value) throw new GoogleOAuthConfigurationError(name);
   return value;
+}
+
+export function assertGoogleOAuthConfiguration() {
+  requireEnv('GOOGLE_CLIENT_ID');
+  requireEnv('GOOGLE_CLIENT_SECRET');
+  requireEnv('GOOGLE_REDIRECT_URI');
+  requireEnv('TOKEN_ENCRYPTION_KEY');
 }
 
 function encryptionKey() {
