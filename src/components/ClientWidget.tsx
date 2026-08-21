@@ -13,6 +13,7 @@ import {
   weekdayForDateKey,
   zonedDateTimeToUtc,
 } from '../lib/date';
+import RRGoogleIcon from './RRGoogleIcon';
 
 interface ClientWidgetProps {
   settings: ProviderSettings;
@@ -21,11 +22,9 @@ interface ClientWidgetProps {
   bookings: Booking[];
   onAddBooking: (booking: Omit<Booking, 'id' | 'createdAt' | 'status'>) => void;
   isEmbedPreview?: boolean;
-  googleToken?: string | null;
   googleEvents?: CalendarEvent[];
-  onGoogleSignIn?: () => Promise<void>;
-  onGoogleLogout?: () => void;
   googleUser?: any | null;
+  onOpenProviderWorkspace?: () => void;
 }
 
 export default function ClientWidget({
@@ -35,11 +34,9 @@ export default function ClientWidget({
   bookings,
   onAddBooking,
   isEmbedPreview = false,
-  googleToken = null,
   googleEvents = [],
-  onGoogleSignIn,
-  onGoogleLogout,
   googleUser = null,
+  onOpenProviderWorkspace,
 }: ClientWidgetProps) {
   // Current client flow step: 'booking' | 'success'
   const [step, setStep] = useState<'booking' | 'success'>('booking');
@@ -413,15 +410,6 @@ export default function ClientWidget({
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Passive Calendar Sync Indicator */}
-            {googleToken && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-fade text-green border border-green/20 rounded-full text-[10px] uppercase tracking-wider font-semibold font-eyebrow">
-                <span className="w-1.5 h-1.5 rounded-full bg-green animate-pulse" />
-                Live Availability Synced
-              </span>
-            )}
-          </div>
         </header>
 
         <AnimatePresence mode="wait">
@@ -769,6 +757,12 @@ export default function ClientWidget({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {onOpenProviderWorkspace && (
+          <div className="rr-google-nav-wrap">
+            <RRGoogleIcon label="Open Provider Workspace" onClick={onOpenProviderWorkspace} />
+          </div>
+        )}
 
       </div>
     </main>

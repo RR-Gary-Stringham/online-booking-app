@@ -1,5 +1,6 @@
 import App from '@/src/App';
+import { publicAppUrl } from '@/src/lib/app-url';
 
 export default function HomePage() {
-  return <App publicAppUrl={process.env.APP_URL} />;
+  return <App publicAppUrl={publicAppUrl()} />;
 }

@@ -1,4 +1,5 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
+import { appUrl } from './app-url';
 
 export const GOOGLE_OAUTH_COOKIE = 'revrebel_google_oauth';
 export const GOOGLE_OAUTH_STATE_COOKIE = 'revrebel_google_oauth_state';
@@ -30,7 +31,6 @@ function requireEnv(
   name:
     | 'GOOGLE_CLIENT_ID'
     | 'GOOGLE_CLIENT_SECRET'
-    | 'GOOGLE_REDIRECT_URI'
     | 'TOKEN_ENCRYPTION_KEY',
 ) {
   const value = process.env[name];
@@ -41,8 +41,8 @@ function requireEnv(
 export function assertGoogleOAuthConfiguration() {
   requireEnv('GOOGLE_CLIENT_ID');
   requireEnv('GOOGLE_CLIENT_SECRET');
-  requireEnv('GOOGLE_REDIRECT_URI');
   requireEnv('TOKEN_ENCRYPTION_KEY');
+  appUrl('/api/auth/google/callback');
 }
 
 function encryptionKey() {
@@ -53,7 +53,7 @@ function encryptionKey() {
 export function googleAuthorizationUrl(state: string) {
   const params = new URLSearchParams({
     client_id: requireEnv('GOOGLE_CLIENT_ID'),
-    redirect_uri: requireEnv('GOOGLE_REDIRECT_URI'),
+    redirect_uri: appUrl('/api/auth/google/callback').toString(),
     response_type: 'code',
     access_type: 'offline',
     prompt: 'consent',
@@ -78,7 +78,7 @@ export async function exchangeAuthorizationCode(code: string): Promise<GoogleOAu
       code,
       client_id: requireEnv('GOOGLE_CLIENT_ID'),
       client_secret: requireEnv('GOOGLE_CLIENT_SECRET'),
-      redirect_uri: requireEnv('GOOGLE_REDIRECT_URI'),
+      redirect_uri: appUrl('/api/auth/google/callback').toString(),
       grant_type: 'authorization_code',
     }),
     cache: 'no-store',

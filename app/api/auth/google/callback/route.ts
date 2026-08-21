@@ -6,6 +6,7 @@ import {
   encryptGoogleSession,
   exchangeAuthorizationCode,
 } from '@/src/lib/google-oauth-server';
+import { appUrl } from '@/src/lib/app-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,15 +27,15 @@ export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code');
   const state = request.nextUrl.searchParams.get('state');
   const expectedState = request.cookies.get(GOOGLE_OAUTH_STATE_COOKIE)?.value;
-  const appUrl = new URL('/app?google=connected', request.url);
+  const returnUrl = appUrl('?google=connected');
 
   if (!code || !state || !expectedState || state !== expectedState) {
-    return googleErrorRedirect(appUrl, 'invalid-state');
+    return googleErrorRedirect(returnUrl, 'invalid-state');
   }
 
   try {
     const session = await exchangeAuthorizationCode(code);
-    const response = NextResponse.redirect(appUrl);
+    const response = NextResponse.redirect(returnUrl);
     response.cookies.set(GOOGLE_OAUTH_COOKIE, encryptGoogleSession(session), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -47,10 +48,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     if (error instanceof GoogleOAuthConfigurationError) {
       console.warn('[google-oauth] Callback configuration is incomplete.', error.message);
-      return googleErrorRedirect(appUrl, 'configuration');
+      return googleErrorRedirect(returnUrl, 'configuration');
     }
 
     console.error('[google-oauth] Authorization callback failed.', error);
-    return googleErrorRedirect(appUrl, 'unexpected');
+    return googleErrorRedirect(returnUrl, 'unexpected');
   }
 }

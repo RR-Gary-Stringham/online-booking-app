@@ -3,6 +3,7 @@ import { Calendar as CalendarIcon, Clock, Settings, Save, CheckCircle, XCircle, 
 import { motion, AnimatePresence } from 'motion/react';
 import { WeeklyWorkingDay, MeetingType, Booking, ProviderSettings } from '../types';
 import { supportedTimeZones } from '../lib/date';
+import RRGoogleIcon from './RRGoogleIcon';
 
 interface AdminDashboardProps {
   settings: ProviderSettings;
@@ -17,7 +18,8 @@ interface AdminDashboardProps {
   googleUser?: any | null;
   onGoogleSignIn?: () => Promise<void>;
   onGoogleLogout?: () => void;
-  publicAppUrl?: string;
+  publicAppUrl: string;
+  onBackToBooking?: () => void;
 }
 
 export default function AdminDashboard({
@@ -34,6 +36,7 @@ export default function AdminDashboard({
   onGoogleSignIn,
   onGoogleLogout,
   publicAppUrl,
+  onBackToBooking,
 }: AdminDashboardProps) {
   // Navigation tabs: 'bookings' | 'schedule' | 'types' | 'embed_config' | 'brevo_settings' | 'workspace_addon' | 'google_calendar'
   const [activeTab, setActiveTab] = useState<'bookings' | 'schedule' | 'types' | 'embed_config' | 'brevo_settings' | 'workspace_addon' | 'google_calendar'>('bookings');
@@ -81,13 +84,7 @@ export default function AdminDashboard({
 
   // Determine App URL for embedding
   const absoluteEmbedUrl = useMemo(() => {
-    const configuredUrl = publicAppUrl?.trim().replace(/\/$/, '');
-    if (configuredUrl) return `${configuredUrl}?embed=true`;
-
-    const appPath = window.location.pathname.startsWith('/app')
-      ? '/app'
-      : window.location.pathname.replace(/\/$/, '');
-    return `${window.location.origin}${appPath}?embed=true`;
+    return `${publicAppUrl.replace(/\/$/, '')}?embed=true`;
   }, [publicAppUrl]);
 
   const embedCodeSnippet = useMemo(() => {
@@ -131,7 +128,7 @@ export default function AdminDashboard({
     setTestStatus('loading');
     setTestError('');
     try {
-      const response = await fetch('/api/send-confirmation', {
+      const response = await fetch(`${publicAppUrl.replace(/\/$/, '')}/api/send-confirmation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -279,7 +276,7 @@ export default function AdminDashboard({
   }, [settings.colorTheme]);
 
   return (
-    <div className="admin-workspace w-full bg-white rounded-3xl border border-dark-blue shadow-xl overflow-hidden min-h-[580px] grid grid-cols-1 lg:grid-cols-12">
+    <div className="admin-workspace relative w-full bg-white rounded-3xl border border-dark-blue shadow-xl overflow-hidden min-h-[580px] grid grid-cols-1 lg:grid-cols-12">
       
       {/* Side navigational rail */}
       <div className="lg:col-span-3 bg-slate-50 border-r border-slate-100 p-6 flex flex-col justify-between">
@@ -1467,6 +1464,12 @@ function openAdminDialog() {
           )}
 
         </AnimatePresence>
+
+        {onBackToBooking && (
+          <div className="rr-google-nav-wrap rr-google-nav-wrap-admin">
+            <RRGoogleIcon label="Return to Booking Page" onClick={onBackToBooking} />
+          </div>
+        )}
       </div>
 
     </div>
