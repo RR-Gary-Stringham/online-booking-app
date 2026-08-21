@@ -163,6 +163,7 @@ export default function ClientWidget({
       time: string;
       providerDate: string;
       displayTime: string;
+      startTimestamp: number;
       isBooked: boolean;
       isPast: boolean;
     }[] = [];
@@ -212,13 +213,14 @@ export default function ClientWidget({
           time: timeStr,
           providerDate,
           displayTime: formatTimeInTimeZone(slotDateObj, viewerTimeZone),
+          startTimestamp: slotDateObj.getTime(),
           isBooked,
           isPast: slotDateObj < now,
         });
       }
     }
 
-    return slots.sort((a, b) => a.key.localeCompare(b.key));
+    return slots.sort((a, b) => a.startTimestamp - b.startTimestamp);
   }, [selectedDateStr, selectedType, workingHours, bookings, googleEvents, settings.timezone, viewerTimeZone]);
 
   const selectMeetingType = (type: MeetingType) => {

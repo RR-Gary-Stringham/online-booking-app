@@ -17,6 +17,7 @@ interface AdminDashboardProps {
   googleUser?: any | null;
   onGoogleSignIn?: () => Promise<void>;
   onGoogleLogout?: () => void;
+  publicAppUrl?: string;
 }
 
 export default function AdminDashboard({
@@ -32,6 +33,7 @@ export default function AdminDashboard({
   googleUser = null,
   onGoogleSignIn,
   onGoogleLogout,
+  publicAppUrl,
 }: AdminDashboardProps) {
   // Navigation tabs: 'bookings' | 'schedule' | 'types' | 'embed_config' | 'brevo_settings' | 'workspace_addon' | 'google_calendar'
   const [activeTab, setActiveTab] = useState<'bookings' | 'schedule' | 'types' | 'embed_config' | 'brevo_settings' | 'workspace_addon' | 'google_calendar'>('bookings');
@@ -62,7 +64,10 @@ export default function AdminDashboard({
   const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [testError, setTestError] = useState('');
   const [isSavedSuccessfully, setIsSavedSuccessfully] = useState(false);
-  const timeZoneOptions = useMemo(() => supportedTimeZones(), []);
+  const timeZoneOptions = useMemo(() => {
+    const zones = supportedTimeZones();
+    return zones.includes(timezone) ? zones : [timezone, ...zones];
+  }, [timezone]);
 
   // New meeting type form states
   const [showAddType, setShowAddType] = useState(false);
@@ -76,14 +81,18 @@ export default function AdminDashboard({
 
   // Determine App URL for embedding
   const absoluteEmbedUrl = useMemo(() => {
-    // Current deployment URL fallback
-    const base = window.location.protocol + '//' + window.location.host;
-    return `${base}?embed=true`;
-  }, []);
+    const configuredUrl = publicAppUrl?.trim().replace(/\/$/, '');
+    if (configuredUrl) return `${configuredUrl}?embed=true`;
+
+    const appPath = window.location.pathname.startsWith('/app')
+      ? '/app'
+      : window.location.pathname.replace(/\/$/, '');
+    return `${window.location.origin}${appPath}?embed=true`;
+  }, [publicAppUrl]);
 
   const embedCodeSnippet = useMemo(() => {
     const shadowStyle = embedShadow ? 'box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);' : '';
-    return `<iframe src="${absoluteEmbedUrl}" width="${embedWidth}" height="${embedHeight}px" style="border: 1px solid #f1f5f9; border-radius: 20px; ${shadowStyle}"></iframe>`;
+    return `<iframe src="${absoluteEmbedUrl}" width="${embedWidth}" height="${embedHeight}" style="border: 1px solid #f1f5f9; border-radius: 20px; ${shadowStyle}"></iframe>`;
   }, [absoluteEmbedUrl, embedWidth, embedHeight, embedShadow]);
 
   // Bookings stats

@@ -15,7 +15,7 @@ const appApiPath = (path: string) =>
     ? `/app${path}`
     : path;
 
-export default function App() {
+export default function App({ publicAppUrl }: { publicAppUrl?: string }) {
   // Check if iframe rendering mode
   const [isEmbedMode, setIsEmbedMode] = useState(false);
 
@@ -305,6 +305,7 @@ export default function App() {
                 googleUser={googleUser}
                 onGoogleSignIn={handleGoogleSignIn}
                 onGoogleLogout={handleGoogleLogout}
+                publicAppUrl={publicAppUrl}
               />
             </motion.div>
           )}
