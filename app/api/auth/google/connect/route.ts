@@ -33,6 +33,8 @@ export async function GET() {
       );
     }
 
+    // No upstream request occurs in this route. Any non-configuration failure
+    // here is an unexpected internal error, so 500 is more accurate than 503.
     console.error('[google-oauth] Unable to start authorization.', error);
     return NextResponse.json(
       { error: 'Google Calendar connection could not be started.' },

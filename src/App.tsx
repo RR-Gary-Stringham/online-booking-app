@@ -8,6 +8,7 @@ import { Booking, MeetingType, ProviderSettings, WeeklyWorkingDay } from './type
 import { Globe, ShieldAlert, Sparkles, Layout, Settings as SettingsIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { CalendarEvent } from './lib/googleCalendar';
+import { formatLocalDateTime } from './lib/date';
 
 const appApiPath = (path: string) =>
   typeof window !== 'undefined' && window.location.pathname.startsWith('/app')
@@ -29,10 +30,7 @@ export default function App() {
   const [googleUser, setGoogleUser] = useState<any | null>(null);
   const [googleEvents, setGoogleEvents] = useState<CalendarEvent[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
-  const systemTimeLabel = useMemo(
-    () => `${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`,
-    [],
-  );
+  const systemTimeLabel = useMemo(() => formatLocalDateTime(new Date()), []);
 
   // Read only non-sensitive connection metadata. OAuth tokens remain in an
   // encrypted, HTTP-only server cookie and are never exposed to this client.

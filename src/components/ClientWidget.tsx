@@ -3,6 +3,7 @@ import { Calendar as CalendarIcon, Clock, User, Mail, MessageSquare, CheckCircle
 import { motion, AnimatePresence } from 'motion/react';
 import { WeeklyWorkingDay, MeetingType, Booking, ProviderSettings } from '../types';
 import { CalendarEvent } from '../lib/googleCalendar';
+import { formatLocalDateKey } from '../lib/date';
 
 interface ClientWidgetProps {
   settings: ProviderSettings;
@@ -64,12 +65,7 @@ export default function ClientWidget({
     return today;
   }, []);
 
-  const todayDateStr = useMemo(() => {
-    const year = baseToday.getFullYear();
-    const month = String(baseToday.getMonth() + 1).padStart(2, '0');
-    const day = String(baseToday.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }, [baseToday]);
+  const todayDateStr = useMemo(() => formatLocalDateKey(baseToday), [baseToday]);
 
   const rowDays = useMemo(() => {
     const days: {
@@ -161,6 +157,7 @@ export default function ClientWidget({
 
     const slotInterval = selectedType.duration;
     const slots: { time: string; isBooked: boolean; isPast: boolean }[] = [];
+    const now = new Date();
 
     for (let min = startMinutes; min + slotInterval <= endMinutes; min += slotInterval) {
       const h = Math.floor(min / 60);
@@ -193,7 +190,7 @@ export default function ClientWidget({
       }
 
       // Prevent booking slots that have already passed in real time.
-      const isPast = slotDateObj < new Date();
+      const isPast = slotDateObj < now;
 
       slots.push({
         time: timeStr,
