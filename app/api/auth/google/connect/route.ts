@@ -1,11 +1,18 @@
 import { randomBytes } from 'node:crypto';
 import { NextResponse } from 'next/server';
-import { GOOGLE_OAUTH_STATE_COOKIE, googleAuthorizationUrl } from '@/src/lib/google-oauth-server';
+import {
+  assertGoogleOAuthConfiguration,
+  GOOGLE_OAUTH_STATE_COOKIE,
+  googleAuthorizationUrl,
+} from '@/src/lib/google-oauth-server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    // Validate the complete server configuration before sending the provider
+    // through Google consent, including the key needed by the callback.
+    assertGoogleOAuthConfiguration();
     const state = randomBytes(24).toString('base64url');
     const response = NextResponse.redirect(googleAuthorizationUrl(state));
     response.cookies.set(GOOGLE_OAUTH_STATE_COOKIE, state, {
@@ -16,7 +23,8 @@ export async function GET() {
       maxAge: 10 * 60,
     });
     return response;
-  } catch {
+  } catch (error) {
+    console.error('[google-oauth] Unable to start authorization.', error);
     return NextResponse.json({ error: 'Google Calendar connection is unavailable.' }, { status: 503 });
   }
 }

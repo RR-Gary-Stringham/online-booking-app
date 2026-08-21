@@ -8,6 +8,12 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+function redirectWithClearedState(url: URL) {
+  const response = NextResponse.redirect(url);
+  response.cookies.delete(GOOGLE_OAUTH_STATE_COOKIE);
+  return response;
+}
+
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code');
   const state = request.nextUrl.searchParams.get('state');
@@ -16,9 +22,8 @@ export async function GET(request: NextRequest) {
 
   if (!code || !state || !expectedState || state !== expectedState) {
     appUrl.searchParams.set('google', 'error');
-    const response = NextResponse.redirect(appUrl);
-    response.cookies.delete(GOOGLE_OAUTH_STATE_COOKIE);
-    return response;
+    appUrl.searchParams.set('retry', 'connect-calendar');
+    return redirectWithClearedState(appUrl);
   }
 
   try {
@@ -33,10 +38,10 @@ export async function GET(request: NextRequest) {
     });
     response.cookies.delete(GOOGLE_OAUTH_STATE_COOKIE);
     return response;
-  } catch {
+  } catch (error) {
+    console.error('[google-oauth] Authorization callback failed.', error);
     appUrl.searchParams.set('google', 'error');
-    const response = NextResponse.redirect(appUrl);
-    response.cookies.delete(GOOGLE_OAUTH_STATE_COOKIE);
-    return response;
+    appUrl.searchParams.set('retry', 'connect-calendar');
+    return redirectWithClearedState(appUrl);
   }
 }
