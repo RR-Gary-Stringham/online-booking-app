@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import {
   assertGoogleOAuthConfiguration,
+  GoogleOAuthConfigurationError,
   GOOGLE_OAUTH_STATE_COOKIE,
   googleAuthorizationUrl,
 } from '@/src/lib/google-oauth-server';
@@ -24,7 +25,18 @@ export async function GET() {
     });
     return response;
   } catch (error) {
+    if (error instanceof GoogleOAuthConfigurationError) {
+      console.warn('[google-oauth] Authorization is not configured.', error.message);
+      return NextResponse.json(
+        { error: 'Google Calendar connection is not configured.' },
+        { status: 503 },
+      );
+    }
+
     console.error('[google-oauth] Unable to start authorization.', error);
-    return NextResponse.json({ error: 'Google Calendar connection is unavailable.' }, { status: 503 });
+    return NextResponse.json(
+      { error: 'Google Calendar connection could not be started.' },
+      { status: 500 },
+    );
   }
 }
