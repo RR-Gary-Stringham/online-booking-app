@@ -80,7 +80,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
           type: 'rr-booking-resize',
           height: document.documentElement.scrollHeight,
         },
-        window.location.origin,
+        '*',
       );
     };
 
