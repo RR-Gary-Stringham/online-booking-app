@@ -256,6 +256,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
         googleEvents={googleEvents}
         googleUser={null}
         isEmbedPreview={true}
+        providerWorkspaceUrl={publicAppUrl}
       />
     );
   }
