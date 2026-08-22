@@ -71,6 +71,26 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
     setData(loaded);
   }, []);
 
+  useEffect(() => {
+    if (!isEmbedMode || window.parent === window) return;
+
+    const reportHeight = () => {
+      window.parent.postMessage(
+        {
+          type: 'rr-booking-resize',
+          height: document.documentElement.scrollHeight,
+        },
+        '*',
+      );
+    };
+
+    const resizeObserver = new ResizeObserver(reportHeight);
+    resizeObserver.observe(document.body);
+    reportHeight();
+
+    return () => resizeObserver.disconnect();
+  }, [isEmbedMode, data, viewMode]);
+
   // Sync methods back to storage
   const handleUpdateSettings = (newSettings: ProviderSettings) => {
     if (!data) return;
@@ -170,11 +190,26 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
     );
   }
 
+  if (isEmbedMode) {
+    return (
+      <ClientWidget
+        settings={data.settings}
+        workingHours={data.workingHours}
+        meetingTypes={data.meetingTypes}
+        bookings={data.bookings}
+        onAddBooking={handleAddBooking}
+        googleEvents={googleEvents}
+        googleUser={googleUser}
+        isEmbedPreview={true}
+      />
+    );
+  }
+
   return (
     <div className="app-shell bg-slate-50/50 min-h-screen font-sans selection:bg-slate-800 selection:text-white flex items-center">
-      <main className={`max-w-6xl w-full mx-auto flex flex-col justify-center ${isEmbedMode ? 'p-1' : 'p-4 md:p-8'}`}>
+      <main className="w-full max-w-6xl mx-auto p-4 md:p-8 flex flex-col justify-center">
         <AnimatePresence mode="wait">
-          {viewMode === 'preview' || isEmbedMode ? (
+          {viewMode === 'preview' ? (
             <motion.div
               key="widget-preview"
               initial={{ opacity: 0, scale: 0.99 }}
@@ -190,8 +225,8 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
                 onAddBooking={handleAddBooking}
                 googleEvents={googleEvents}
                 googleUser={googleUser}
-                isEmbedPreview={isEmbedMode}
-                onOpenProviderWorkspace={isEmbedMode ? undefined : () => setViewMode('admin')}
+                isEmbedPreview={false}
+                onOpenProviderWorkspace={() => setViewMode('admin')}
               />
             </motion.div>
           ) : (
