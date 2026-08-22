@@ -2595,6 +2595,8 @@ body .app-shell {
     font-weight: 700 !important;
     line-height: 1 !important;
     letter-spacing: 0.04em !important;
+    box-sizing: border-box;
+    padding-top: 3px;
 }
 
 .booking-widget .available-time-tile.is-selected,
