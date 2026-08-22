@@ -13,7 +13,7 @@ const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'i
 
 export async function POST(request: NextRequest) {
   const session = decryptGoogleSession(request.cookies.get(GOOGLE_OAUTH_COOKIE)?.value);
-  if (!session?.email || !session.email.toLowerCase().endsWith('@revrebel.io')) {
+  if (!session?.email || !(session.expiresAt > Date.now()) || !session.email.toLowerCase().endsWith('@revrebel.io')) {
     return NextResponse.json({ error: 'An authorized REVREBEL account is required.' }, { status: 401 });
   }
 
