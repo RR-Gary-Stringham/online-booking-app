@@ -33,12 +33,17 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
   // Read only non-sensitive connection metadata. OAuth tokens remain in an
   // encrypted, HTTP-only server cookie and are never exposed to this client.
   useEffect(() => {
+    const workspaceRequested = new URLSearchParams(window.location.search).get('workspace') === 'true';
     setIsLoadingEvents(true);
     fetch(appApiUrl(publicAppUrl, '/api/auth/google/status'), { cache: 'no-store' })
       .then((response) => response.json())
       .then((status) => {
         setGoogleToken(status.connected ? 'server-session' : null);
         setGoogleUser(status.user ?? null);
+        if (workspaceRequested) {
+          if (status.connected) setViewMode('admin');
+          else window.location.assign(appApiUrl(publicAppUrl, '/api/auth/google/connect'));
+        }
       })
       .catch(() => {
         setGoogleToken(null);
@@ -256,6 +261,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
         googleEvents={googleEvents}
         googleUser={null}
         isEmbedPreview={true}
+        providerWorkspaceUrl={appApiUrl(publicAppUrl, '?workspace=true')}
       />
     );
   }

@@ -25,6 +25,7 @@ interface ClientWidgetProps {
   googleEvents?: CalendarEvent[];
   googleUser?: any | null;
   onOpenProviderWorkspace?: () => void;
+  providerWorkspaceUrl?: string;
 }
 
 export default function ClientWidget({
@@ -37,6 +38,7 @@ export default function ClientWidget({
   googleEvents = [],
   googleUser = null,
   onOpenProviderWorkspace,
+  providerWorkspaceUrl,
 }: ClientWidgetProps) {
   // Current client flow step: 'booking' | 'success'
   const [step, setStep] = useState<'booking' | 'success'>('booking');
@@ -760,9 +762,13 @@ export default function ClientWidget({
           )}
         </AnimatePresence>
 
-        {onOpenProviderWorkspace && (
+        {(onOpenProviderWorkspace || providerWorkspaceUrl) && (
           <div className="rr-google-nav-wrap">
-            <RRGoogleIcon label="Open Provider Workspace" onClick={onOpenProviderWorkspace} />
+            <RRGoogleIcon
+              label="Open Provider Workspace"
+              onClick={onOpenProviderWorkspace}
+              href={providerWorkspaceUrl}
+            />
           </div>
         )}
 
