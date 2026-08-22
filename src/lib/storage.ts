@@ -6,7 +6,9 @@ const STORAGE_KEYS = {
 };
 
 const DEFAULT_SETTINGS: ProviderSettings = {
-  name: 'Gary',
+  name: 'Gary Stringham',
+  firstName: 'Gary',
+  lastName: 'Stringham',
   email: 'gary@revrebel.io',
   businessName: 'Rev Rebel Strategy',
   welcomeMessage: 'Welcome! Browse my real-time availability below and schedule a 1:1 strategy session with me in minutes. Once booked, we\'ll automatically generate your calendar link.',

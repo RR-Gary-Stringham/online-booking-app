@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, Settings, Save, CheckCircle, XCircle, Trash2, Plus, Info, Copy, ClipboardCheck, ToggleLeft, ToggleRight, Edit, ArrowDown, ExternalLink, Mail, Workflow, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { WeeklyWorkingDay, MeetingType, Booking, ProviderSettings } from '../types';
@@ -58,6 +58,9 @@ export default function AdminDashboard({
   const [welcomeMessage, setWelcomeMessage] = useState(settings.welcomeMessage);
   const [timezone, setTimezone] = useState(settings.timezone);
   const [colorTheme, setColorTheme] = useState(settings.colorTheme);
+  const [profileImageUrl, setProfileImageUrl] = useState(settings.profileImageUrl || '');
+  const [imageUploadStatus, setImageUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [imageUploadError, setImageUploadError] = useState('');
 
   // Brevo SMTP integration states
   const [brevoApiKey, setBrevoApiKey] = useState(settings.brevoApiKey || '');
@@ -71,6 +74,10 @@ export default function AdminDashboard({
     const zones = supportedTimeZones();
     return zones.includes(timezone) ? zones : [timezone, ...zones];
   }, [timezone]);
+
+  useEffect(() => {
+    if (googleUser?.displayName) setProviderName(googleUser.displayName);
+  }, [googleUser]);
 
   // New meeting type form states
   const [showAddType, setShowAddType] = useState(false);
@@ -103,8 +110,13 @@ export default function AdminDashboard({
   // Save Settings handler
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
+    const nameParts = providerName.trim().split(/\s+/).filter(Boolean);
+    const firstName = nameParts.shift() || '';
+    const lastName = nameParts.join(' ');
     onUpdateSettings({
       name: providerName,
+      firstName,
+      lastName,
       email: settings.email,
       businessName,
       welcomeMessage,
@@ -113,9 +125,37 @@ export default function AdminDashboard({
       brevoApiKey,
       brevoSenderEmail,
       brevoSenderName,
+      profileImageUrl,
     });
     setIsSavedSuccessfully(true);
     setTimeout(() => setIsSavedSuccessfully(false), 3000);
+  };
+
+  const handleProfileImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setImageUploadStatus('uploading');
+    setImageUploadError('');
+
+    try {
+      const body = new FormData();
+      body.append('image', file);
+      const response = await fetch(`${publicAppUrl.replace(/\/$/, '')}/api/provider/profile-image`, {
+        method: 'POST',
+        body,
+      });
+      const result = await response.json() as { url?: string; error?: string };
+      if (!response.ok || !result.url) throw new Error(result.error || 'The image could not be uploaded.');
+
+      setProfileImageUrl(result.url);
+      onUpdateSettings({ ...settings, profileImageUrl: result.url });
+      setImageUploadStatus('success');
+    } catch (error) {
+      setImageUploadStatus('error');
+      setImageUploadError(error instanceof Error ? error.message : 'The image could not be uploaded.');
+    } finally {
+      event.target.value = '';
+    }
   };
 
   const handleSendTestEmail = async (e: React.FormEvent) => {
@@ -791,6 +831,39 @@ export default function AdminDashboard({
                         value={providerName}
                         onChange={(e) => setProviderName(e.target.value)}
                       />
+                    </div>
+
+                    <div className="provider-image-setting">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Provider Image</label>
+                      <div className="flex items-center gap-4">
+                        {(profileImageUrl || googleUser?.photoURL) ? (
+                          <img
+                            src={profileImageUrl || googleUser.photoURL}
+                            alt={providerName || 'Provider'}
+                            className="w-[100px] h-[100px] rounded-full object-cover border-2 border-[#163666]"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <div className="w-[100px] h-[100px] rounded-full bg-[#163666] text-[#b2d3de] flex items-center justify-center font-display font-bold text-2xl uppercase">
+                            {providerName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('') || 'RR'}
+                          </div>
+                        )}
+                        <div className="space-y-2">
+                          <label className="rr-button-outline cursor-pointer">
+                            {imageUploadStatus === 'uploading' ? 'Uploading…' : 'Upload Image'}
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,image/gif"
+                              className="sr-only"
+                              disabled={imageUploadStatus === 'uploading'}
+                              onChange={handleProfileImageUpload}
+                            />
+                          </label>
+                          <p className="text-[10px] text-slate-400">JPEG, PNG, WebP, or GIF. Maximum 4MB.</p>
+                          {imageUploadStatus === 'success' && <p className="text-[10px] text-green">Saved to Webflow.</p>}
+                          {imageUploadError && <p className="text-[10px] text-red">{imageUploadError}</p>}
+                        </div>
+                      </div>
                     </div>
 
                     <div>

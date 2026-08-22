@@ -30,6 +30,8 @@ export interface Booking {
 
 export interface ProviderSettings {
   name: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   businessName: string;
   welcomeMessage: string;
@@ -38,4 +40,19 @@ export interface ProviderSettings {
   brevoApiKey?: string;
   brevoSenderEmail?: string;
   brevoSenderName?: string;
+  profileImageUrl?: string;
+}
+
+export interface BookingPageContent {
+  slug: string;
+  meetingTemplate: string;
+  firstName: string;
+  lastName: string;
+  templateName: string;
+  eyebrow: string;
+  headline: string;
+  subheadline: string;
+  description: string;
+  isUserTemplate: boolean;
+  userImageUrl?: string;
 }

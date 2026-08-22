@@ -23,6 +23,9 @@ The current frontend retains some provider, meeting-template, and booking state 
 - [Google OAuth server library](src/lib/google-oauth-server.ts): Server-only authorization, token exchange, refresh, and encrypted session handling.
 - [Google OAuth callback](app/api/auth/google/callback/route.ts): Validates OAuth state and returns providers to the canonical application URL.
 - [Availability API](app/api/availability/route.ts): Boundary for live provider availability.
+- [Booking-page API](app/api/booking-pages/[slug]/route.ts): Public, normalized lookup of live Webflow CMS booking-page presentation data.
+- [Provider image API](app/api/provider/profile-image/route.ts): Authenticated REVREBEL image upload and Webflow CMS item update.
+- [Webflow server library](src/lib/webflow-server.ts): Server-only CMS lookups, asset uploads, slug generation, and live item updates.
 
 ## Configuration
 
