@@ -5,6 +5,7 @@ import ClientWidget from './components/ClientWidget';
 import AdminDashboard from './components/AdminDashboard';
 import { loadWidgetData, saveWidgetData, FullWidgetData } from './lib/storage';
 import { Booking, MeetingType, ProviderSettings, WeeklyWorkingDay } from './types';
+import type { BookingPageContent } from './types';
 import { motion, AnimatePresence } from 'motion/react';
 import type { CalendarEvent } from './lib/googleCalendar';
 
@@ -14,9 +15,11 @@ const appApiUrl = (publicAppUrl: string, path: string) =>
 export default function App({ publicAppUrl }: { publicAppUrl: string }) {
   // Check if iframe rendering mode
   const [isEmbedMode, setIsEmbedMode] = useState(false);
+  const [calendarSlug, setCalendarSlug] = useState('');
 
   // App wide state loaded from helper
   const [data, setData] = useState<FullWidgetData | null>(null);
+  const [isDataReady, setIsDataReady] = useState(false);
 
   // View mode inside parent wrapper: 'preview' (client booking) | 'admin' (provider controls)
   const [viewMode, setViewMode] = useState<'preview' | 'admin'>('preview');
@@ -61,7 +64,9 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
       const urlParams = new URLSearchParams(window.location.search);
       const embedMode = urlParams.get('embed') === 'true';
       setIsEmbedMode(embedMode);
+      setCalendarSlug(urlParams.get('calendar')?.trim().toLowerCase() ?? '');
       if (embedMode) setViewMode('preview');
+      else if (urlParams.get('google') === 'connected') setViewMode('admin');
     };
     
     checkEmbed();
@@ -69,7 +74,57 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
     // Load local storage initial state
     const loaded = loadWidgetData();
     setData(loaded);
+    setIsDataReady(true);
   }, []);
+
+  useEffect(() => {
+    if (!calendarSlug || !isDataReady) return;
+
+    const controller = new AbortController();
+    fetch(appApiUrl(publicAppUrl, `/api/booking-pages/${encodeURIComponent(calendarSlug)}`), {
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Booking page lookup failed with ${response.status}.`);
+        return response.json() as Promise<BookingPageContent>;
+      })
+      .then((page) => {
+        const fullName = [page.firstName, page.lastName].filter(Boolean).join(' ');
+        setData((current) => current ? {
+          ...current,
+          settings: {
+            ...current.settings,
+            name: fullName || (page.isUserTemplate ? current.settings.name : 'REVREBEL'),
+            firstName: page.firstName || undefined,
+            lastName: page.lastName || undefined,
+            profileImageUrl: page.userImageUrl,
+          },
+        } : current);
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        console.error('[booking-page] Unable to load CMS configuration.', error);
+      });
+
+    return () => controller.abort();
+  }, [calendarSlug, isDataReady, publicAppUrl]);
+
+  useEffect(() => {
+    if (isEmbedMode || !googleUser?.displayName) return;
+    const nameParts = googleUser.displayName.trim().split(/\s+/);
+    const firstName = nameParts.shift() || '';
+    const lastName = nameParts.join(' ');
+    setData((current) => current ? {
+      ...current,
+      settings: {
+        ...current.settings,
+        name: googleUser.displayName,
+        firstName,
+        lastName,
+      },
+    } : current);
+  }, [googleUser, isEmbedMode]);
 
   useEffect(() => {
     if (!isEmbedMode || window.parent === window) return;
@@ -199,7 +254,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
         bookings={data.bookings}
         onAddBooking={handleAddBooking}
         googleEvents={googleEvents}
-        googleUser={googleUser}
+        googleUser={null}
         isEmbedPreview={true}
       />
     );
@@ -226,7 +281,10 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
                 googleEvents={googleEvents}
                 googleUser={googleUser}
                 isEmbedPreview={false}
-                onOpenProviderWorkspace={() => setViewMode('admin')}
+                onOpenProviderWorkspace={() => {
+                  if (googleToken) setViewMode('admin');
+                  else void handleGoogleSignIn();
+                }}
               />
             </motion.div>
           ) : (

@@ -305,16 +305,19 @@ export default function ClientWidget({
     });
   }, [selectedDateStr]);
 
-  // Computed first and last name display (google representation if authenticated or fallback "Gary Rebel")
-  const displayName = useMemo(() => {
-    if (googleUser?.displayName) {
-      return googleUser.displayName;
-    }
-    if (settings.name === 'Gary') {
-      return 'Gary Rebel';
-    }
-    return settings.name;
-  }, [googleUser, settings.name]);
+  // Prefer the CMS/provider record, then the connected Google profile.
+  const displayName = useMemo<string>(() => {
+    const configuredName = [settings.firstName, settings.lastName].filter(Boolean).join(' ').trim();
+    return configuredName || settings.name || String(googleUser?.displayName || '') || 'REVREBEL';
+  }, [googleUser, settings.firstName, settings.lastName, settings.name]);
+
+  const profileImageUrl = settings.profileImageUrl || googleUser?.photoURL || '';
+  const providerInitials = displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((name) => name[0])
+    .join('') || 'RR';
 
   const primaryColorVar = useMemo(() => {
     switch (settings.colorTheme) {
@@ -390,18 +393,18 @@ export default function ClientWidget({
       <div className="p-6 md:p-10 relative z-10">
         
         {/* ARCHITECTURAL HEADER */}
-        <header className="booking-widget-header flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-200/80 mb-8 font-brand">
-          <div className="flex items-center gap-4">
-            {googleUser?.photoURL ? (
+        <header className="booking-widget-header flex flex-col sm:flex-row justify-between items-start gap-6 pb-6 border-b border-slate-200/80 mb-8 font-brand">
+          <div className="provider-identity flex items-center gap-5">
+            {profileImageUrl ? (
               <img
-                src={googleUser.photoURL}
+                src={profileImageUrl}
                 alt={displayName}
-                className="w-10 h-10 rounded-full object-cover shadow-sm"
+                className="provider-avatar rounded-full object-cover shadow-sm"
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className="avatar-initials w-10 h-10 rounded-full bg-[var(--primary)] flex items-center justify-center shadow-sm uppercase">
-                {displayName ? displayName.split(' ').map((n: string) => n[0]).join('') : 'R'}
+              <div className="provider-avatar avatar-initials rounded-full bg-[var(--primary)] flex items-center justify-center shadow-sm uppercase">
+                {providerInitials}
               </div>
             )}
             <div>
@@ -409,7 +412,27 @@ export default function ClientWidget({
               <p className="provider-title text-[10px] mt-1">Chief Rebel</p>
             </div>
           </div>
-          
+
+          <div className="timezone-control timezone-control-header">
+            <label htmlFor="viewer-timezone">Time zone</label>
+            <select
+              id="viewer-timezone"
+              value={viewerTimeZone}
+              onChange={(event) => {
+                setViewerTimeZone(event.target.value);
+                setWindowOffset(0);
+                setSelectedDateStr('');
+                setSelectedTimeSlot('');
+                setSelectedProviderDateStr('');
+                setSelectedDisplayTime('');
+              }}
+              aria-label="Display timezone"
+            >
+              {timeZoneOptions.map((timeZone) => (
+                <option key={timeZone} value={timeZone}>{timeZone.replaceAll('_', ' ')}</option>
+              ))}
+            </select>
+          </div>
         </header>
 
         <AnimatePresence mode="wait">
@@ -701,27 +724,6 @@ export default function ClientWidget({
                   </form>
                 </motion.section>
               )}
-
-              <footer className="timezone-control text-[10px] text-stone-400 font-medium font-eyebrow mt-12 flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 pt-4 gap-2">
-                <label htmlFor="viewer-timezone">Time zone</label>
-                <select
-                  id="viewer-timezone"
-                  value={viewerTimeZone}
-                  onChange={(event) => {
-                    setViewerTimeZone(event.target.value);
-                    setWindowOffset(0);
-                    setSelectedDateStr('');
-                    setSelectedTimeSlot('');
-                    setSelectedProviderDateStr('');
-                    setSelectedDisplayTime('');
-                  }}
-                  aria-label="Display timezone"
-                >
-                  {timeZoneOptions.map((timeZone) => (
-                    <option key={timeZone} value={timeZone}>{timeZone.replaceAll('_', ' ')}</option>
-                  ))}
-                </select>
-              </footer>
 
             </motion.div>
           ) : (

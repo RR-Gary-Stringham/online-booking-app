@@ -1534,6 +1534,12 @@ main > [class*="bg-white"][class*="border"] > div:first-child > div:first-child 
     text-transform: none;
 }
 
+.booking-widget .provider-avatar {
+    width: 100px !important;
+    height: 100px !important;
+    min-width: 100px;
+}
+
 .booking-widget .avatar-initials {
     color: #b2d3de !important;
     font-family: "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif !important;
@@ -2033,6 +2039,41 @@ main > * {
 .booking-widget .timezone-control select:focus-visible {
     outline: 2px solid #455e84 !important;
     outline-offset: 2px;
+}
+
+.booking-widget .timezone-control-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+    margin-left: auto;
+}
+
+.booking-widget .timezone-control-header label {
+    display: block;
+    width: 100%;
+    text-align: left;
+}
+
+.booking-widget .timezone-control-header select {
+    width: 280px;
+}
+
+@media (max-width: 639px) {
+    .booking-widget .booking-widget-header,
+    .booking-widget .timezone-control-header {
+        width: 100%;
+    }
+
+    .booking-widget .timezone-control-header {
+        align-items: stretch;
+        margin-left: 0;
+    }
+
+    .booking-widget .timezone-control-header select {
+        width: 100%;
+        max-width: none;
+    }
 }
 
 .rr-google-nav-wrap {

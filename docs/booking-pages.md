@@ -8,7 +8,7 @@ When the application moves to another domain, update `APP_URL` and register `${A
 
 ## Webflow CMS collection
 
-The booking-page collection ID is `6a88cd437008cead90d60fd1`. Configure it through `WEBFLOW_BOOKING_COLLECTION_ID`. The app-specific Webflow credential is `BOOKING_CALENDAR_API_KEY`; do not expose it to browser code.
+The Webflow site ID is `6a09244ce43d4439301ce56f` and the booking-page collection ID is `6a88cd437008cead90d60fd1`. Configure them through `WEBFLOW_SITE_ID` and `WEBFLOW_BOOKING_COLLECTION_ID`. The app-specific Webflow credential is `BOOKING_CALENDAR_API_KEY`; do not expose it to browser code. It requires `assets:write` and `CMS:write` for provider-image uploads.
 
 Use application-specific secret names instead of a shared generic token name. This keeps each Webflow API credential traceable to the application that owns it when several applications run on the same Webflow site.
 
@@ -21,6 +21,12 @@ The collection template route is `/calendar/{slug}`. Its shared embed passes the
 - `first-name`: the provider's first name.
 - `last-name`: the provider's last name.
 - `template-name`: `Book a Meeting with {first name}`.
+- `meeting-template-eyebrow`: optional collection-page eyebrow.
+- `meeting-template-headline`: optional collection-page headline.
+- `meeting-template-subheadline`: optional collection-page subheadline.
+- `meeting-template-description`: optional collection-page description.
+- `is-user-template`: `true`.
+- `user-image`: uploaded provider image. The booking widget uses this first, then the Google profile image, then initials.
 
 Example: Gary Stringham maps to `gary-stringham`, with the template name `Book a Meeting with Gary`.
 
@@ -31,5 +37,7 @@ Example: Gary Stringham maps to `gary-stringham`, with the template name `Book a
 - `first-name`: empty.
 - `last-name`: empty.
 - `template-name`: `Book a Meeting with REVREBEL`.
+- `is-user-template`: `false`.
+- `user-image`: empty unless a shared template image is configured.
 
 Webflow CMS items are public routing and presentation records. Provider and meeting-template changes originate in the application and synchronize to Webflow through server-only API routes.
