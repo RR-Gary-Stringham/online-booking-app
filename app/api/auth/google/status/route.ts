@@ -1,14 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { decryptGoogleSession, GOOGLE_OAUTH_COOKIE } from '@/src/lib/google-oauth-server';
+import {
+  decryptGoogleSession,
+  encryptGoogleSession,
+  getValidAccessToken,
+  GOOGLE_OAUTH_COOKIE,
+} from '@/src/lib/google-oauth-server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const session = decryptGoogleSession(request.cookies.get(GOOGLE_OAUTH_COOKIE)?.value);
-  return NextResponse.json({
-    connected: Boolean(session),
-    user: session ? { email: session.email, displayName: session.name, photoURL: session.picture } : null,
-  });
+  if (!session) return NextResponse.json({ connected: false, user: null });
+
+  try {
+    const { session: validSession } = await getValidAccessToken(session);
+    const response = NextResponse.json({
+      connected: true,
+      user: {
+        email: validSession.email,
+        displayName: validSession.name,
+        photoURL: validSession.picture,
+      },
+    });
+    if (validSession !== session) {
+      response.cookies.set(GOOGLE_OAUTH_COOKIE, encryptGoogleSession(validSession), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 30 * 24 * 60 * 60,
+      });
+    }
+    return response;
+  } catch (error) {
+    console.warn('[google-oauth] Stored authorization is no longer valid.', error);
+    const response = NextResponse.json({ connected: false, user: null });
+    response.cookies.delete(GOOGLE_OAUTH_COOKIE);
+    return response;
+  }
 }
 
 export async function DELETE() {

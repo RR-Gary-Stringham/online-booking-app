@@ -19,6 +19,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
 
   // App wide state loaded from helper
   const [data, setData] = useState<FullWidgetData | null>(null);
+  const [isDataReady, setIsDataReady] = useState(false);
 
   // View mode inside parent wrapper: 'preview' (client booking) | 'admin' (provider controls)
   const [viewMode, setViewMode] = useState<'preview' | 'admin'>('preview');
@@ -73,10 +74,11 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
     // Load local storage initial state
     const loaded = loadWidgetData();
     setData(loaded);
+    setIsDataReady(true);
   }, []);
 
   useEffect(() => {
-    if (!calendarSlug) return;
+    if (!calendarSlug || !isDataReady) return;
 
     const controller = new AbortController();
     fetch(appApiUrl(publicAppUrl, `/api/booking-pages/${encodeURIComponent(calendarSlug)}`), {
@@ -106,7 +108,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
       });
 
     return () => controller.abort();
-  }, [calendarSlug, publicAppUrl]);
+  }, [calendarSlug, isDataReady, publicAppUrl]);
 
   useEffect(() => {
     if (isEmbedMode || !googleUser?.displayName) return;
