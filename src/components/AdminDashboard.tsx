@@ -379,14 +379,16 @@ export default function AdminDashboard({
   const handleDeleteMeetingType = async (id: string) => {
     if (confirm('Delete this meeting format? This cannot be undone.')) {
       setTemplateSyncStatus('saving');
-      const response = await fetch(`${publicAppUrl.replace(/\/$/, '')}/api/provider/templates?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
-      const result = await response.json();
-      if (response.ok) {
+      setTemplateSyncError('');
+      try {
+        const response = await fetch(`${publicAppUrl.replace(/\/$/, '')}/api/provider/templates?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Template could not be deleted.');
         setCalendarTemplates(result.templates ?? []);
         setTemplateSyncStatus('idle');
-      } else {
+      } catch (error) {
         setTemplateSyncStatus('error');
-        setTemplateSyncError(result.error || 'Template could not be deleted.');
+        setTemplateSyncError(error instanceof Error ? error.message : 'Template could not be deleted.');
       }
     }
   };

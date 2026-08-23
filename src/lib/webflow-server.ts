@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import type { BookingPageAssignedUser, BookingPageContent, CalendarTemplate } from '../types';
 
 const WEBFLOW_API_BASE = 'https://api.webflow.com/v2';
-const USER_IMAGE_FIELD = 'user';
+const TEMPLATE_IMAGE_FIELD = 'template-image';
 
 interface WebflowImageValue {
   fileId?: string;
@@ -105,7 +105,7 @@ function fieldOption(fields: Record<string, unknown>, key: string) {
 }
 
 function imageUrl(fields: Record<string, unknown>) {
-  const image = fields[USER_IMAGE_FIELD] as WebflowImageValue | undefined;
+  const image = fields[TEMPLATE_IMAGE_FIELD] as WebflowImageValue | undefined;
   return image && typeof image.url === 'string' ? image.url : undefined;
 }
 
@@ -305,7 +305,7 @@ export async function uploadProviderImage(input: {
     method: 'PATCH',
     body: JSON.stringify({
       fieldData: {
-        [USER_IMAGE_FIELD]: { fileId: asset.id, url, alt: input.alt },
+        [TEMPLATE_IMAGE_FIELD]: { fileId: asset.id, url, alt: input.alt },
       },
     }),
   });
