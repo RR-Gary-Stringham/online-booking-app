@@ -557,11 +557,11 @@ export default function AdminDashboard({
                 <div className="flex items-center gap-2">
                   <div className="bg-[#00a6b6] border border-[#00a6b6] rounded-xl p-2.5 text-center min-w-20">
                     <span className="block text-[#faca78] text-[10px] font-semibold uppercase font-mono">Bookings</span>
-                    <span className="text-md font-bold text-[#faca78] font-display">{statsBookings.total}</span>
+                    <span className="rr-metric-value rr-metric-value-cyan text-md font-bold font-display">{statsBookings.total}</span>
                   </div>
                   <div className="bg-[#8e456a] rounded-xl p-2.5 text-center min-w-20">
                     <span className="block text-[#f37d59] text-[10px] font-semibold uppercase font-mono">Pending</span>
-                    <span className="text-md font-bold text-[#f37d59] font-display">{statsBookings.pending}</span>
+                    <span className="rr-metric-value rr-metric-value-purple text-md font-bold font-display">{statsBookings.pending}</span>
                   </div>
                 </div>
               </div>
@@ -1673,7 +1673,7 @@ function openAdminDialog() {
 
                     <div className="space-y-4">
                       <div className="flex gap-3">
-                        <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-[#163666] text-xs font-semibold shrink-0">01</div>
+                        <div className="rr-calendar-feature-number w-6 h-6 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0">01</div>
                         <div>
                           <h5 className="text-xs font-bold text-slate-700">Dynamic Blockout Engine</h5>
                           <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
@@ -1683,7 +1683,7 @@ function openAdminDialog() {
                       </div>
 
                       <div className="flex gap-3">
-                        <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-[#163666] text-xs font-semibold shrink-0">02</div>
+                        <div className="rr-calendar-feature-number w-6 h-6 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0">02</div>
                         <div>
                           <h5 className="text-xs font-bold text-slate-700">Instant Invites & Notifications</h5>
                           <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
@@ -1693,7 +1693,7 @@ function openAdminDialog() {
                       </div>
 
                       <div className="flex gap-3">
-                        <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-[#163666] text-xs font-semibold shrink-0">03</div>
+                        <div className="rr-calendar-feature-number w-6 h-6 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0">03</div>
                         <div>
                           <h5 className="text-xs font-bold text-slate-700">Seamless OAuth Security</h5>
                           <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">

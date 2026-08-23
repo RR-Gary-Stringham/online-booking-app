@@ -2220,6 +2220,19 @@ body .app-shell {
     text-transform: uppercase;
 }
 
+.admin-workspace .rr-metric-value-cyan {
+    color: #faca78 !important;
+}
+
+.admin-workspace .rr-metric-value-purple {
+    color: #f37d59 !important;
+}
+
+.admin-workspace .rr-calendar-feature-number {
+    color: #163666 !important;
+    background-color: #eff5f6 !important;
+}
+
 .admin-workspace p,
 .admin-workspace label,
 .admin-workspace input,
