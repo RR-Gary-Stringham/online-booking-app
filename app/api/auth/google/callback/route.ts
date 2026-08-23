@@ -7,6 +7,7 @@ import {
   exchangeAuthorizationCode,
 } from '@/src/lib/google-oauth-server';
 import { appUrl, AppUrlConfigurationError } from '@/src/lib/app-url';
+import { ensureProviderBookingPage } from '@/src/lib/webflow-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +38,7 @@ export async function GET(request: NextRequest) {
     }
 
     const session = await exchangeAuthorizationCode(code);
+    await ensureProviderBookingPage(session);
     const response = NextResponse.redirect(returnUrl);
     response.cookies.set(GOOGLE_OAUTH_COOKIE, encryptGoogleSession(session), {
       httpOnly: true,

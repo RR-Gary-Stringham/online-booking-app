@@ -5,6 +5,7 @@ import {
   getValidAccessToken,
   GOOGLE_OAUTH_COOKIE,
 } from '@/src/lib/google-oauth-server';
+import { ensureProviderBookingPage } from '@/src/lib/webflow-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,11 @@ export async function GET(request: NextRequest) {
 
   try {
     const { session: validSession } = await getValidAccessToken(session);
+    try {
+      await ensureProviderBookingPage(validSession);
+    } catch (error) {
+      console.error('[webflow] Unable to ensure provider booking page.', error);
+    }
     const response = NextResponse.json({
       connected: true,
       user: {
