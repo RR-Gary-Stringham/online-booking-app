@@ -46,6 +46,7 @@ export interface ProviderSettings {
   brevoSenderEmail?: string;
   brevoSenderName?: string;
   profileImageUrl?: string;
+  isUserTemplate?: boolean;
 }
 
 export interface BookingPageContent {

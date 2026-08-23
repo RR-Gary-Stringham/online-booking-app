@@ -122,6 +122,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
             firstName: page.firstName || undefined,
             lastName: page.lastName || undefined,
             profileImageUrl: page.userImageUrl,
+            isUserTemplate: page.isUserTemplate,
           },
         } : current);
       })
@@ -199,7 +200,29 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
   };
 
   const handleAddBooking = async (newBookingData: Omit<Booking, 'id' | 'createdAt' | 'status'>) => {
-    if (!data) return;
+    if (!data) throw new Error('The booking application is not ready.');
+    const meetingType = data.meetingTypes.find((type) => type.id === newBookingData.meetingTypeId);
+    if (!calendarSlug || !meetingType) throw new Error('This booking page is missing its calendar configuration.');
+
+    const bookingResponse = await fetch(appApiUrl(publicAppUrl, '/api/bookings'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        calendarSlug,
+        duration: meetingType.duration,
+        clientName: newBookingData.clientName,
+        clientEmail: newBookingData.clientEmail,
+        clientNotes: newBookingData.clientNotes,
+        date: newBookingData.date,
+        time: newBookingData.time,
+        providerTimezone: newBookingData.providerTimezone || data.settings.timezone,
+      }),
+    });
+    const bookingResult = await bookingResponse.json() as { success?: boolean; error?: string };
+    if (!bookingResponse.ok || !bookingResult.success) {
+      throw new Error(bookingResult.error || 'The meeting could not be added to Google Calendar.');
+    }
+
     const bookingId = 'b-' + Math.floor(Math.random() * 10000000);
     const newBooking: Booking = {
       ...newBookingData,
@@ -217,7 +240,6 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
     // Dispatch beautiful branded notifications in real-time if Brevo API is configured
     if (data.settings.brevoApiKey) {
       try {
-        const meetingType = data.meetingTypes.find((t) => t.id === newBookingData.meetingTypeId);
         const durationMinutes = meetingType ? meetingType.duration : 15;
         
         // Build robust human-readable date representation

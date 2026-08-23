@@ -1534,6 +1534,14 @@ main > [class*="bg-white"][class*="border"] > div:first-child > div:first-child 
     text-transform: none;
 }
 
+.booking-widget .provider-template-label {
+    color: #163666 !important;
+    font-family: "Barlow", "Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
 .booking-widget .provider-avatar {
     width: 100px !important;
     height: 100px !important;
@@ -2403,12 +2411,19 @@ body .app-shell {
     }
 }
 
-/* Compact confirmation composition mirrors the REVREBEL reference layout. */
+/* Confirmation composition fills the embedding parent while its content stays responsive. */
 .booking-widget.is-confirmation-view {
-    max-width: 760px !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 100vh;
+    height: 100%;
 }
 
 .booking-widget.is-confirmation-view > .relative {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 100vh;
     padding: 0 !important;
 }
 
@@ -2445,8 +2460,9 @@ body .app-shell {
 
 .booking-widget .confirmation-layout {
     display: grid;
+    flex: 1 1 auto;
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-    align-items: start;
+    align-items: center;
     gap: 46px;
     padding: 80px 78px 84px;
     text-align: left;

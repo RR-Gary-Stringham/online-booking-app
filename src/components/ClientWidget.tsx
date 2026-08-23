@@ -20,7 +20,7 @@ interface ClientWidgetProps {
   workingHours: WeeklyWorkingDay[];
   meetingTypes: MeetingType[];
   bookings: Booking[];
-  onAddBooking: (booking: Omit<Booking, 'id' | 'createdAt' | 'status'>) => void;
+  onAddBooking: (booking: Omit<Booking, 'id' | 'createdAt' | 'status'>) => Promise<void>;
   isEmbedPreview?: boolean;
   googleEvents?: CalendarEvent[];
   googleUser?: any | null;
@@ -43,6 +43,7 @@ export default function ClientWidget({
   // Current client flow step: 'booking' | 'success'
   const [step, setStep] = useState<'booking' | 'success'>('booking');
   const [selectedType, setSelectedType] = useState<MeetingType | null>(null);
+  const [submissionError, setSubmissionError] = useState('');
   
   // Date selection states
   const [selectedDateStr, setSelectedDateStr] = useState<string>(''); // YYYY-MM-DD
@@ -238,7 +239,7 @@ export default function ClientWidget({
     setSelectedDisplayTime('');
   };
 
-  const handleSubmitBooking = (e: React.FormEvent) => {
+  const handleSubmitBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: { name?: string; email?: string } = {};
 
@@ -253,9 +254,9 @@ export default function ClientWidget({
     }
 
     setErrors({});
+    setSubmissionError('');
     setIsSubmitting(true);
-
-    setTimeout(() => {
+    try {
       const generatedId = 'b-' + Math.floor(Math.random() * 10000000);
       const clientName = `${clientFirstName.trim()} ${clientLastName.trim()}`;
       const bookingNotes = [
@@ -264,7 +265,7 @@ export default function ClientWidget({
         clientNotes.trim() ? `Additional Information: ${clientNotes.trim()}` : '',
       ].filter(Boolean).join('\n');
       setRecentBookingId(generatedId);
-      onAddBooking({
+      await onAddBooking({
         meetingTypeId: selectedType!.id,
         clientName,
         clientEmail,
@@ -274,9 +275,12 @@ export default function ClientWidget({
         clientTimezone: viewerTimeZone,
         providerTimezone: settings.timezone,
       });
-      setIsSubmitting(false);
       setStep('success');
-    }, 1500);
+    } catch (error) {
+      setSubmissionError(error instanceof Error ? error.message : 'The meeting could not be confirmed.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetFlow = () => {
@@ -411,7 +415,9 @@ export default function ClientWidget({
             )}
             <div>
               <h1 className="text-2xl font-display font-bold uppercase tracking-wider text-stone-900 leading-none">{displayName}</h1>
-              <p className="provider-title text-[10px] mt-1">Chief Rebel</p>
+              <p className={`provider-title text-[10px] mt-1 ${settings.isUserTemplate === false ? 'provider-template-label' : ''}`}>
+                {settings.isUserTemplate === false ? 'REVREBEL' : 'Chief Rebel'}
+              </p>
             </div>
           </div>
 
@@ -650,6 +656,9 @@ export default function ClientWidget({
                   </h2>
 
                   <form onSubmit={handleSubmitBooking} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {submissionError && (
+                      <p className="md:col-span-2 text-sm text-[#e05047]" role="alert">{submissionError}</p>
+                    )}
                     <div className="md:col-span-1">
                       <label className="block text-[9px] uppercase tracking-widest text-stone-500 font-bold mb-1.5 font-eyebrow">
                         First Name
