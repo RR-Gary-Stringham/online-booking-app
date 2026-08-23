@@ -8,8 +8,13 @@ export interface WeeklyWorkingDay {
 export interface MeetingType {
   id: string;
   name: string;
+  slug?: string;
   duration: number; // in minutes
+  eyebrow?: string;
+  headline?: string;
+  subheadline?: string;
   description: string;
+  assignedUsers?: string[];
   color: string; // tailwind color class e.g., "blue_theme"
   enabled: boolean;
 }

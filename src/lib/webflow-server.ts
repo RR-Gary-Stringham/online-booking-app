@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import type { BookingPageContent } from '../types';
 
 const WEBFLOW_API_BASE = 'https://api.webflow.com/v2';
-const USER_IMAGE_FIELD = 'user-image';
+const USER_IMAGE_FIELD = 'user';
 
 interface WebflowImageValue {
   fileId?: string;

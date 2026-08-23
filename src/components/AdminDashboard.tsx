@@ -82,9 +82,15 @@ export default function AdminDashboard({
   // New meeting type form states
   const [showAddType, setShowAddType] = useState(false);
   const [newTypeName, setNewTypeName] = useState('');
+  const [newTypeSlug, setNewTypeSlug] = useState('');
   const [newTypeDuration, setNewTypeDuration] = useState(30);
+  const [newTypeEyebrow, setNewTypeEyebrow] = useState('');
+  const [newTypeHeadline, setNewTypeHeadline] = useState('');
+  const [newTypeSubheadline, setNewTypeSubheadline] = useState('');
   const [newTypeDesc, setNewTypeDesc] = useState('');
+  const [newTypeAssignedUsers, setNewTypeAssignedUsers] = useState('');
   const [newTypeColor, setNewTypeColor] = useState('dark-blue');
+  const [editingMeetingTypeId, setEditingMeetingTypeId] = useState<string | null>(null);
 
   // Local copy of schedule
   const [localHours, setLocalHours] = useState<WeeklyWorkingDay[]>([...workingHours]);
@@ -249,27 +255,65 @@ export default function AdminDashboard({
     onUpdateMeetingTypes(updated);
   };
 
-  const handleAddMeetingType = (e: React.FormEvent) => {
+  const meetingTypeSlug = (value: string) => value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  const resetMeetingTypeForm = () => {
+    setNewTypeName('');
+    setNewTypeSlug('');
+    setNewTypeDuration(30);
+    setNewTypeEyebrow('');
+    setNewTypeHeadline('');
+    setNewTypeSubheadline('');
+    setNewTypeDesc('');
+    setNewTypeAssignedUsers('');
+    setNewTypeColor('dark-blue');
+    setEditingMeetingTypeId(null);
+    setShowAddType(false);
+  };
+
+  const handleSaveMeetingType = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTypeName.trim()) return;
 
-    const newType: MeetingType = {
-      id: 'mt-' + Date.now(),
+    const savedType: MeetingType = {
+      id: editingMeetingTypeId || 'mt-' + Date.now(),
       name: newTypeName,
+      slug: meetingTypeSlug(newTypeSlug || newTypeName),
       duration: Number(newTypeDuration),
+      eyebrow: newTypeEyebrow,
+      headline: newTypeHeadline,
+      subheadline: newTypeSubheadline,
       description: newTypeDesc,
+      assignedUsers: newTypeAssignedUsers.split(',').map((user) => user.trim()).filter(Boolean),
       color: newTypeColor,
-      enabled: true,
+      enabled: editingMeetingTypeId
+        ? meetingTypes.find((type) => type.id === editingMeetingTypeId)?.enabled ?? true
+        : true,
     };
 
-    onUpdateMeetingTypes([...meetingTypes, newType]);
-    
-    // Clear Form
-    setNewTypeName('');
-    setNewTypeDuration(30);
-    setNewTypeDesc('');
-    setNewTypeColor('indigo');
-    setShowAddType(false);
+    onUpdateMeetingTypes(editingMeetingTypeId
+      ? meetingTypes.map((type) => type.id === editingMeetingTypeId ? savedType : type)
+      : [...meetingTypes, savedType]);
+    resetMeetingTypeForm();
+  };
+
+  const handleEditMeetingType = (meetingType: MeetingType) => {
+    setEditingMeetingTypeId(meetingType.id);
+    setNewTypeName(meetingType.name);
+    setNewTypeSlug(meetingType.slug || meetingTypeSlug(meetingType.name));
+    setNewTypeDuration(meetingType.duration);
+    setNewTypeEyebrow(meetingType.eyebrow || 'Select a Meeting Option');
+    setNewTypeHeadline(meetingType.headline || meetingType.name);
+    setNewTypeSubheadline(meetingType.subheadline || '');
+    setNewTypeDesc(meetingType.description);
+    setNewTypeAssignedUsers((meetingType.assignedUsers || []).join(', '));
+    setNewTypeColor(meetingType.color);
+    setShowAddType(true);
   };
 
   const handleDeleteMeetingType = (id: string) => {
@@ -642,22 +686,22 @@ export default function AdminDashboard({
 
                 <button
                   id="btn-show-add-type"
-                  onClick={() => setShowAddType(!showAddType)}
+                  onClick={() => showAddType ? resetMeetingTypeForm() : setShowAddType(true)}
                   className="px-4 py-2 border border-slate-150 text-slate-700 hover:bg-slate-50 shadow-xs rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5"
                 >
                   <Plus size={14} />
-                  <span>{showAddType ? 'Cancel' : 'Create format'}</span>
+                  <span>{showAddType ? 'Cancel' : 'Create template'}</span>
                 </button>
               </div>
 
               {showAddType && (
                 <motion.form
-                  onSubmit={handleAddMeetingType}
+                  onSubmit={handleSaveMeetingType}
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   className="p-5 border border-slate-150 rounded-2xl bg-slate-50/50 space-y-4"
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Format Name</label>
                       <input
@@ -668,6 +712,21 @@ export default function AdminDashboard({
                         value={newTypeName}
                         onChange={(e) => setNewTypeName(e.target.value)}
                         placeholder="Discovery Intake Session"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Template Slug</label>
+                      <input
+                        id="new-type-slug"
+                        type="text"
+                        required
+                        className="w-full px-4 py-2 text-xs font-semibold border border-slate-150 bg-white rounded-xl focus:ring-4 focus:ring-slate-400/5 focus:outline-none"
+                        value={newTypeSlug}
+                        onChange={(e) => setNewTypeSlug(meetingTypeSlug(e.target.value))}
+                        onFocus={() => {
+                          if (!newTypeSlug) setNewTypeSlug(meetingTypeSlug(newTypeName));
+                        }}
+                        placeholder="partner-meeting"
                       />
                     </div>
                     <div>
@@ -687,8 +746,59 @@ export default function AdminDashboard({
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Eyebrow</label>
+                      <input
+                        id="new-type-eyebrow"
+                        type="text"
+                        className="w-full px-4 py-2 text-xs border border-slate-150 bg-white rounded-xl focus:ring-4 focus:ring-slate-400/5 focus:outline-none"
+                        value={newTypeEyebrow}
+                        onChange={(e) => setNewTypeEyebrow(e.target.value)}
+                        placeholder="Select a Meeting Option"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Headline</label>
+                      <input
+                        id="new-type-headline"
+                        type="text"
+                        className="w-full px-4 py-2 text-xs border border-slate-150 bg-white rounded-xl focus:ring-4 focus:ring-slate-400/5 focus:outline-none"
+                        value={newTypeHeadline}
+                        onChange={(e) => setNewTypeHeadline(e.target.value)}
+                        placeholder="Book a Meeting"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Subheadline</label>
+                      <input
+                        id="new-type-subheadline"
+                        type="text"
+                        className="w-full px-4 py-2 text-xs border border-slate-150 bg-white rounded-xl focus:ring-4 focus:ring-slate-400/5 focus:outline-none"
+                        value={newTypeSubheadline}
+                        onChange={(e) => setNewTypeSubheadline(e.target.value)}
+                        placeholder="Choose a time that works for you."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Assigned Users</label>
+                      <input
+                        id="new-type-assigned-users"
+                        type="text"
+                        className="w-full px-4 py-2 text-xs border border-slate-150 bg-white rounded-xl focus:ring-4 focus:ring-slate-400/5 focus:outline-none"
+                        value={newTypeAssignedUsers}
+                        onChange={(e) => setNewTypeAssignedUsers(e.target.value)}
+                        placeholder="gary@revrebel.io, sarah@revrebel.io"
+                      />
+                      <p className="mt-1 text-[10px] text-slate-400">Separate multiple team members with commas.</p>
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Description</label>
+                    <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Description Text</label>
                     <textarea
                       id="new-type-desc"
                       rows={2}
@@ -731,7 +841,7 @@ export default function AdminDashboard({
                         className="px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 shadow-xs flex items-center gap-1"
                       >
                         <Save size={12} />
-                        <span>Add meeting Format</span>
+                        <span>{editingMeetingTypeId ? 'Save template' : 'Add template'}</span>
                       </button>
                     </div>
                   </div>
@@ -770,11 +880,25 @@ export default function AdminDashboard({
                           <span className="text-xs font-bold text-slate-800">{mt.name}</span>
                           <span className="text-[10px] font-mono font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">{mt.duration} mins</span>
                         </div>
+                        <p className="text-[10px] font-mono text-slate-400 mt-1">/{mt.slug || meetingTypeSlug(mt.name)}</p>
                         <p className="text-[11px] text-slate-500 mt-1 max-w-lg leading-relaxed">{mt.description}</p>
+                        {!!mt.assignedUsers?.length && (
+                          <p className="text-[10px] text-slate-400 mt-1">Assigned: {mt.assignedUsers.join(', ')}</p>
+                        )}
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3">
+                      <button
+                        id={`btn-edit-mt-${mt.id}`}
+                        onClick={() => handleEditMeetingType(mt)}
+                        className="p-1 text-slate-500 hover:text-primary hover:bg-slate-50 rounded-lg transition"
+                        title={`Edit ${mt.name}`}
+                        aria-label={`Edit ${mt.name}`}
+                      >
+                        <Edit size={15} />
+                      </button>
+
                       <button
                         id={`btn-toggle-mt-${mt.id}`}
                         onClick={() => handleToggleMeetingType(mt.id)}
@@ -790,7 +914,9 @@ export default function AdminDashboard({
                       <button
                         id={`btn-del-mt-${mt.id}`}
                         onClick={() => handleDeleteMeetingType(mt.id)}
-                        className="p-1 hover:bg-red-50 text-slate-300 hover:text-red-500 rounded-lg transition"
+                        className="p-1 bg-red-50 text-red hover:bg-red hover:text-red-inverse rounded-lg transition"
+                        title={`Delete ${mt.name}`}
+                        aria-label={`Delete ${mt.name}`}
                       >
                         <Trash2 size={15} />
                       </button>
