@@ -98,9 +98,27 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
         const fullName = [page.firstName, page.lastName].filter(Boolean).join(' ');
         setData((current) => current ? {
           ...current,
+          meetingTypes: page.meetingDurations.length > 0
+            ? page.meetingDurations.map((duration) => {
+                const existing = current.meetingTypes.find((type) => type.duration === duration);
+                return {
+                  id: `cms-${page.slug}-${duration}`,
+                  name: `${duration} Minute Meeting`,
+                  slug: `${page.slug}-${duration}`,
+                  duration,
+                  eyebrow: page.eyebrow || 'Select a Meeting Option',
+                  headline: page.headline || `${duration} Minute Meeting`,
+                  subheadline: page.subheadline,
+                  description: page.description || existing?.description || '',
+                  assignedUsers: [],
+                  color: existing?.color || 'dark-blue',
+                  enabled: true,
+                };
+              })
+            : current.meetingTypes,
           settings: {
             ...current.settings,
-            name: fullName || (page.isUserTemplate ? current.settings.name : 'REVREBEL'),
+            name: fullName || (page.isUserTemplate ? current.settings.name : page.templateName || 'REVREBEL'),
             firstName: page.firstName || undefined,
             lastName: page.lastName || undefined,
             profileImageUrl: page.userImageUrl,

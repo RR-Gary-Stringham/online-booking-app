@@ -8,8 +8,13 @@ export interface WeeklyWorkingDay {
 export interface MeetingType {
   id: string;
   name: string;
+  slug?: string;
   duration: number; // in minutes
+  eyebrow?: string;
+  headline?: string;
+  subheadline?: string;
   description: string;
+  assignedUsers?: string[];
   color: string; // tailwind color class e.g., "blue_theme"
   enabled: boolean;
 }
@@ -44,6 +49,7 @@ export interface ProviderSettings {
 }
 
 export interface BookingPageContent {
+  name: string;
   slug: string;
   meetingTemplate: string;
   firstName: string;
@@ -55,4 +61,25 @@ export interface BookingPageContent {
   description: string;
   isUserTemplate: boolean;
   userImageUrl?: string;
+  meetingDurations: number[];
+  useTheme: boolean;
+  themeOption: string;
+  themeBackground: string;
+  themeForeground: string;
+}
+
+export interface BookingPageAssignedUser {
+  id: string;
+  slug: string;
+  firstName: string;
+  lastName: string;
+  templateName: string;
+  googleCalendarId: string;
+}
+
+export interface CalendarTemplate extends BookingPageContent {
+  id: string;
+  googleCalendarId: string;
+  assignedUserIds: string[];
+  assignedUsers: BookingPageAssignedUser[];
 }
