@@ -144,7 +144,13 @@ export async function listBookingPageItems(live = true) {
 
 export async function findBookingPageItem(slug: string, live = true) {
   const items = await listBookingPageItems(live);
-  return items.find((item) => item.fieldData.slug === slug) ?? null;
+  return (
+    items.find(
+      (item) =>
+        item.fieldData.slug === slug ||
+        item.fieldData['meeting-template'] === slug,
+    ) ?? null
+  );
 }
 
 function assignedUser(item: WebflowCollectionItem): BookingPageAssignedUser {
