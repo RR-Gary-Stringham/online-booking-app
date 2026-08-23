@@ -135,3 +135,18 @@ export async function listDelegatedGoogleCalendars(subject: string) {
 
   return calendars.filter((calendar) => ['owner', 'writer'].includes(calendar.accessRole));
 }
+
+export async function createDelegatedGoogleCalendar(subject: string, summary: string, timeZone = 'America/Los_Angeles') {
+  const accessToken = await getDelegatedGoogleAccessToken(subject);
+  const response = await fetch(`${GOOGLE_CALENDAR_API}/calendars`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ summary, timeZone }),
+    cache: 'no-store',
+  });
+  if (!response.ok) throw new Error(`Google calendar creation failed with ${response.status}.`);
+  return response.json() as Promise<{ id: string; summary: string; timeZone?: string }>;
+}

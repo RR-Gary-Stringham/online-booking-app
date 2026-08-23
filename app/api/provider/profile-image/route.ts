@@ -40,6 +40,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.formData();
     const image = body.get('image');
+    const requestedTemplateId = body.get('templateId');
+    const templateId = typeof requestedTemplateId === 'string' ? requestedTemplateId.trim() : '';
     if (!(image instanceof File) || !ALLOWED_IMAGE_TYPES.has(image.type)) {
       return NextResponse.json({ error: 'Choose a JPEG, PNG, WebP, or GIF image.' }, { status: 400 });
     }
@@ -56,7 +58,8 @@ export async function POST(request: NextRequest) {
       bytes: Buffer.from(await image.arrayBuffer()),
       contentType: image.type,
       fileName: `${slug}-${Date.now()}.${image.name.split('.').pop() || 'jpg'}`,
-      slug,
+      slug: templateId ? undefined : slug,
+      itemId: templateId || undefined,
       alt: session.name || 'REVREBEL team member',
     });
     const response = NextResponse.json(result);

@@ -102,7 +102,7 @@ export default function AdminDashboard({
   const [newTypeHeadline, setNewTypeHeadline] = useState('');
   const [newTypeSubheadline, setNewTypeSubheadline] = useState('');
   const [newTypeDesc, setNewTypeDesc] = useState('');
-  const [newTypeColor, setNewTypeColor] = useState('dark-blue');
+  const [newTypeColor, setNewTypeColor] = useState('primary');
   const [editingMeetingTypeId, setEditingMeetingTypeId] = useState<string | null>(null);
   const [calendarTemplates, setCalendarTemplates] = useState<CalendarTemplate[]>([]);
   const [googleCalendars, setGoogleCalendars] = useState<Array<{ id: string; summary: string; primary: boolean; timeZone?: string }>>([]);
@@ -111,6 +111,7 @@ export default function AdminDashboard({
   const [newTypeGoogleCalendarId, setNewTypeGoogleCalendarId] = useState('');
   const [templateSyncStatus, setTemplateSyncStatus] = useState<'idle' | 'loading' | 'saving' | 'error'>('idle');
   const [templateSyncError, setTemplateSyncError] = useState('');
+  const [templateImageStatus, setTemplateImageStatus] = useState<'idle' | 'uploading' | 'error'>('idle');
 
   // Local copy of schedule
   const [localHours, setLocalHours] = useState<WeeklyWorkingDay[]>([...workingHours]);
@@ -330,7 +331,7 @@ export default function AdminDashboard({
     setNewTypeDesc('');
     setNewTypeAssignedUserIds([]);
     setNewTypeGoogleCalendarId('');
-    setNewTypeColor('dark-blue');
+    setNewTypeColor('primary');
     setEditingMeetingTypeId(null);
     setShowAddType(false);
   };
@@ -343,15 +344,15 @@ export default function AdminDashboard({
     try {
       const current = calendarTemplates.find((template) => template.id === editingMeetingTypeId);
       const themeByKey: Record<string, { option: string; background: string; foreground: string }> = {
-        'dark-blue': { option: 'de19b1a787631a7fa7465ac0ce660669', background: '#163666', foreground: '#B2D3DE' },
-        green: { option: '92b1e0fb7ba8cb271be2977f9680e91a', background: '#00AEC7', foreground: '#FF695D' },
-        'light-blue': { option: '65f7ca05d8d4bb4f63c4769d2207e4ce', background: '#B2D3DE', foreground: '#163666' },
-        yellow: { option: '54ead04968b81d364d6fc2c89eae383d', background: '#F3D232', foreground: '#163666' },
-        orange: { option: 'cdffc34f624175663ffab0393cd115d5', background: '#FF695D', foreground: '#163666' },
-        purple: { option: '018ee43bb3cc33642df6a915a42dabfa', background: '#94436C', foreground: '#FFB000' },
-        frost: { option: '56d54fcab5d4345689bd2ed4f91c86b2', background: '#EFF5F6', foreground: '#163666' },
+        primary: { option: 'de19b1a787631a7fa7465ac0ce660669', background: '#163666', foreground: '#b2d3de' },
+        cyan: { option: '92b1e0fb7ba8cb271be2977f9680e91a', background: '#00a6b6', foreground: '#faca78' },
+        powder: { option: '65f7ca05d8d4bb4f63c4769d2207e4ce', background: '#b2d3de', foreground: '#163666' },
+        yellow: { option: '54ead04968b81d364d6fc2c89eae383d', background: '#faca78', foreground: '#e05047' },
+        orange: { option: 'cdffc34f624175663ffab0393cd115d5', background: '#f37d59', foreground: '#163666' },
+        purple: { option: '018ee43bb3cc33642df6a915a42dabfa', background: '#8e456a', foreground: '#f37d59' },
+        frost: { option: '56d54fcab5d4345689bd2ed4f91c86b2', background: '#eff5f6', foreground: '#163666' },
       };
-      const theme = themeByKey[newTypeColor] || themeByKey['dark-blue'];
+      const theme = themeByKey[newTypeColor] || themeByKey.primary;
       const response = await fetch(`${publicAppUrl.replace(/\/$/, '')}/api/provider/templates`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -376,8 +377,14 @@ export default function AdminDashboard({
           themeForeground: theme.foreground,
         }),
       });
-      const result = await readApiResponse<{ templates?: CalendarTemplate[]; error?: string }>(response, 'Template could not be saved.');
+      const result = await readApiResponse<{ templates?: CalendarTemplate[]; createdCalendar?: { id: string; summary: string; timeZone?: string }; error?: string }>(response, 'Template could not be saved.');
       setCalendarTemplates(result.templates ?? []);
+      if (result.createdCalendar) {
+        const createdCalendar = result.createdCalendar;
+        setGoogleCalendars((currentCalendars) => currentCalendars.some((calendar) => calendar.id === createdCalendar.id)
+          ? currentCalendars
+          : [...currentCalendars, { ...createdCalendar, primary: false }]);
+      }
       setTemplateSyncStatus('idle');
       resetMeetingTypeForm();
     } catch (error) {
@@ -397,10 +404,36 @@ export default function AdminDashboard({
     setNewTypeDesc(template.description);
     setNewTypeAssignedUserIds(template.assignedUserIds);
     setNewTypeGoogleCalendarId(template.googleCalendarId);
-    const colorKey = Object.entries({ 'dark-blue': '#163666', green: '#00AEC7', 'light-blue': '#B2D3DE', yellow: '#F3D232', orange: '#FF695D', purple: '#94436C', frost: '#EFF5F6' })
+    const colorKey = Object.entries({ primary: '#163666', cyan: '#00a6b6', powder: '#b2d3de', yellow: '#faca78', orange: '#f37d59', purple: '#8e456a', frost: '#eff5f6' })
       .find(([, value]) => value.toLowerCase() === template.themeBackground.toLowerCase())?.[0];
-    setNewTypeColor(colorKey || 'dark-blue');
+    setNewTypeColor(colorKey || 'primary');
     setShowAddType(true);
+  };
+
+  const handleTemplateImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !editingMeetingTypeId) return;
+    setTemplateImageStatus('uploading');
+    setTemplateSyncError('');
+    try {
+      if (file.size > 4 * 1024 * 1024) throw new Error('The image must be smaller than 4MB.');
+      const body = new FormData();
+      body.append('image', file);
+      body.append('templateId', editingMeetingTypeId);
+      const response = await fetch(`${publicAppUrl.replace(/\/$/, '')}/api/provider/profile-image`, {
+        method: 'POST',
+        body,
+        credentials: 'include',
+      });
+      const result = await readApiResponse<{ url?: string; error?: string }>(response, 'Template image could not be uploaded.');
+      setCalendarTemplates((templates) => templates.map((template) => template.id === editingMeetingTypeId ? { ...template, userImageUrl: result.url } : template));
+      setTemplateImageStatus('idle');
+    } catch (error) {
+      setTemplateImageStatus('error');
+      setTemplateSyncError(error instanceof Error ? error.message : 'Template image could not be uploaded.');
+    } finally {
+      event.target.value = '';
+    }
   };
 
   const handleDeleteMeetingType = async (id: string) => {
@@ -463,12 +496,16 @@ export default function AdminDashboard({
       <div className="lg:col-span-3 bg-slate-50 border-r border-slate-100 p-6 flex flex-col justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-display font-bold shadow-md bg-slate-800`}>
-              WS
-            </div>
+            {googleUser?.photoURL ? (
+              <img src={googleUser.photoURL} alt={googleUser.displayName || 'Provider'} className="w-10 h-10 rounded-full object-cover shadow-md" referrerPolicy="no-referrer" />
+            ) : (
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-[#b2d3de] font-display font-bold shadow-md bg-[#163666]">
+                {(googleUser?.displayName || settings.name || 'Provider').split(/\s+/).map((part: string) => part[0]).join('').slice(0, 2).toUpperCase()}
+              </div>
+            )}
             <div>
-              <h4 className="text-sm font-bold text-slate-800 font-display">Provider Control</h4>
-              <span className="text-xs text-slate-400 font-medium">gary@revrebel.io</span>
+              <h4 className="text-sm font-bold text-slate-800 font-display">{googleUser?.displayName || settings.name || 'Provider Control'}</h4>
+              <span className="text-xs text-slate-400 font-medium">{googleUser?.email || settings.email}</span>
             </div>
           </div>
 
@@ -890,7 +927,10 @@ export default function AdminDashboard({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-xl border border-slate-150 bg-white p-3">
                       {calendarTemplates.filter((template) => template.isUserTemplate).map((user) => {
                         const editingTemplate = calendarTemplates.find((template) => template.id === editingMeetingTypeId);
-                        const isOwnUserTemplate = editingTemplate?.isUserTemplate === true && user.id === editingTemplate.id;
+                        const isOwnUserTemplate = editingTemplate?.isUserTemplate === true && (
+                          user.id === editingTemplate.id ||
+                          (!!googleUser?.email && user.googleCalendarId.toLowerCase() === googleUser.email.toLowerCase())
+                        );
                         return (
                           <label key={user.id} className={`flex items-center gap-2 text-xs text-slate-600 ${isOwnUserTemplate ? 'font-semibold' : ''}`}>
                             <input
@@ -920,18 +960,37 @@ export default function AdminDashboard({
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Template Image</label>
+                    {editingMeetingTypeId ? (
+                      <div className="flex items-center gap-3">
+                        {calendarTemplates.find((template) => template.id === editingMeetingTypeId)?.userImageUrl && (
+                          <img
+                            src={calendarTemplates.find((template) => template.id === editingMeetingTypeId)?.userImageUrl}
+                            alt="Current template"
+                            className="w-14 h-14 rounded-full object-cover border border-slate-150"
+                          />
+                        )}
+                        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleTemplateImageUpload} disabled={templateImageStatus === 'uploading'} />
+                        {templateImageStatus === 'uploading' && <span className="text-xs text-slate-400">Uploading…</span>}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400">Save the new template first, then edit it to upload an image.</p>
+                    )}
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
                     <div>
                       <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Format Theme Color</label>
                       <div className="flex gap-2">
                         {[
-                          { key: 'dark-blue', name: 'Dark Blue', varName: 'var(--color-dark-blue)' },
-                          { key: 'green', name: 'Green', varName: 'var(--color-green)' },
-                          { key: 'light-blue', name: 'Light Blue', varName: 'var(--color-light-blue)' },
-                          { key: 'yellow', name: 'Yellow', varName: 'var(--color-yellow)' },
-                          { key: 'orange', name: 'Orange', varName: 'var(--color-orange)' },
-                          { key: 'purple', name: 'Purple', varName: 'var(--color-purple)' },
-                          { key: 'frost', name: 'Frost', varName: '#EFF5F6' },
+                          { key: 'primary', name: 'Primary', varName: '#163666' },
+                          { key: 'cyan', name: 'Cyan', varName: '#00a6b6' },
+                          { key: 'powder', name: 'Powder', varName: '#b2d3de' },
+                          { key: 'yellow', name: 'Yellow', varName: '#faca78' },
+                          { key: 'orange', name: 'Orange', varName: '#f37d59' },
+                          { key: 'purple', name: 'Purple', varName: '#8e456a' },
+                          { key: 'frost', name: 'Frost', varName: '#eff5f6' },
                         ].map((c) => (
                           <button
                             key={c.key}
@@ -969,7 +1028,7 @@ export default function AdminDashboard({
                 {calendarTemplates.map((mt) => (
                   <div
                     key={mt.id}
-                    className="p-4 rounded-2xl border border-slate-150 bg-white transition flex items-center justify-between gap-4 shadow-3xs"
+                    className="p-4 border border-slate-150 bg-white transition flex items-start justify-between gap-4 shadow-3xs"
                   >
                     <div className="flex items-start gap-3">
                       <div
@@ -985,7 +1044,7 @@ export default function AdminDashboard({
                           <span className="text-[10px] font-mono font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">{mt.meetingDurations.join(', ')} mins</span>
                         </div>
                         <p className="text-[10px] font-mono text-slate-400 mt-1">/{mt.slug || meetingTypeSlug(mt.name)}</p>
-                        <p className="text-[11px] text-slate-500 mt-1 max-w-lg leading-relaxed">{mt.description}</p>
+                        {!!mt.headline && <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">{mt.headline}</p>}
                         {!!mt.assignedUsers.length && (
                           <p className="text-[10px] text-slate-400 mt-1">Assigned: {mt.assignedUsers.map((user) => [user.firstName, user.lastName].filter(Boolean).join(' ') || user.templateName).join(', ')}</p>
                         )}

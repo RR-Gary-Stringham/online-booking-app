@@ -8,6 +8,7 @@ import {
 } from '@/src/lib/webflow-server';
 import type { CalendarTemplateInput } from '@/src/lib/webflow-server';
 import { refreshProviderCookie, requireProviderSession } from '@/src/lib/provider-auth-server';
+import { createDelegatedGoogleCalendar } from '@/src/lib/google-service-account';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,9 +79,14 @@ export async function POST(request: NextRequest) {
     const auth = await authorization(request);
     const input = templateInput(await request.json() as Record<string, unknown>);
     if (!input) return NextResponse.json({ error: 'A name, slug, and at least one valid duration are required.' }, { status: 400 });
+    let createdCalendar: { id: string; summary: string; timeZone?: string } | null = null;
+    if (!input.isUserTemplate && !input.googleCalendarId && auth.session.email) {
+      createdCalendar = await createDelegatedGoogleCalendar(auth.session.email, input.templateName);
+      input.googleCalendarId = createdCalendar.id;
+    }
     await saveCalendarTemplate(input);
     const templates = await listBookingPages(false);
-    return refreshProviderCookie(NextResponse.json({ templates }), auth.session, auth.storedSession);
+    return refreshProviderCookie(NextResponse.json({ templates, createdCalendar }), auth.session, auth.storedSession);
   } catch (error) {
     if (error instanceof Error && error.message === 'unauthorized') {
       return NextResponse.json({ error: 'An authorized REVREBEL account is required.' }, { status: 401 });

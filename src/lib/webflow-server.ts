@@ -106,6 +106,16 @@ const THEME_OPTION_NAMES: Record<string, string> = {
   '018ee43bb3cc33642df6a915a42dabfa': 'purple',
 };
 
+const THEME_PAIRS: Record<string, { background: string; foreground: string }> = {
+  de19b1a787631a7fa7465ac0ce660669: { background: '#163666', foreground: '#b2d3de' },
+  '92b1e0fb7ba8cb271be2977f9680e91a': { background: '#00a6b6', foreground: '#faca78' },
+  '65f7ca05d8d4bb4f63c4769d2207e4ce': { background: '#b2d3de', foreground: '#163666' },
+  '54ead04968b81d364d6fc2c89eae383d': { background: '#faca78', foreground: '#e05047' },
+  cdffc34f624175663ffab0393cd115d5: { background: '#f37d59', foreground: '#163666' },
+  '018ee43bb3cc33642df6a915a42dabfa': { background: '#8e456a', foreground: '#f37d59' },
+  '56d54fcab5d4345689bd2ed4f91c86b2': { background: '#eff5f6', foreground: '#163666' },
+};
+
 function fieldOption(fields: Record<string, unknown>, key: string) {
   const value = fieldString(fields, key);
   return THEME_OPTION_NAMES[value] || value;
@@ -236,6 +246,7 @@ export interface CalendarTemplateInput {
 }
 
 function calendarTemplateFields(input: CalendarTemplateInput) {
+  const themePair = input.themeOption ? THEME_PAIRS[input.themeOption] : undefined;
   return {
     name: input.name,
     slug: slugify(input.slug || input.name),
@@ -252,8 +263,8 @@ function calendarTemplateFields(input: CalendarTemplateInput) {
     'assigned-users': input.isUserTemplate ? [] : input.assignedUserIds,
     'use-theme': input.useTheme === true,
     'theme-option': input.themeOption || null,
-    'theme-color': input.themeBackground || '',
-    'theme-foreground': input.themeForeground || '',
+    'theme-color': themePair?.background || input.themeBackground || '',
+    'theme-foreground': themePair?.foreground || input.themeForeground || '',
   };
 }
 
@@ -328,10 +339,13 @@ export async function uploadProviderImage(input: {
   bytes: Buffer;
   contentType: string;
   fileName: string;
-  slug: string;
+  slug?: string;
+  itemId?: string;
   alt: string;
 }) {
-  const item = await findBookingPageItem(input.slug, false);
+  const item = input.itemId
+    ? (await listBookingPageItems(false)).find((candidate) => candidate.id === input.itemId)
+    : await findBookingPageItem(input.slug || '', false);
   if (!item) throw new Error('No matching provider booking page was found.');
 
   const siteId = requireWebflowEnv('WEBFLOW_SITE_ID');
