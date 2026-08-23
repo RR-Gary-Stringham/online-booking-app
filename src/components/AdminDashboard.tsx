@@ -555,13 +555,13 @@ export default function AdminDashboard({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-2.5 text-center min-w-20">
-                    <span className="block text-slate-400 text-[10px] font-semibold uppercase font-mono">Bookings</span>
-                    <span className="text-md font-bold text-slate-700 font-display">{statsBookings.total}</span>
+                  <div className="bg-[#00a6b6] border border-[#00a6b6] rounded-xl p-2.5 text-center min-w-20">
+                    <span className="block text-[#faca78] text-[10px] font-semibold uppercase font-mono">Bookings</span>
+                    <span className="text-md font-bold text-[#faca78] font-display">{statsBookings.total}</span>
                   </div>
-                  <div className="bg-purple rounded-xl p-2.5 text-center min-w-20">
-                    <span className="block text-purple-inverse/85 text-[10px] font-semibold uppercase font-mono">Pending</span>
-                    <span className="text-md font-bold text-purple-inverse font-display">{statsBookings.pending}</span>
+                  <div className="bg-[#8e456a] rounded-xl p-2.5 text-center min-w-20">
+                    <span className="block text-[#f37d59] text-[10px] font-semibold uppercase font-mono">Pending</span>
+                    <span className="text-md font-bold text-[#f37d59] font-display">{statsBookings.pending}</span>
                   </div>
                 </div>
               </div>
@@ -1593,7 +1593,7 @@ function openAdminDialog() {
 
                     {googleToken ? (
                       <div className="space-y-5">
-                        <div className="flex items-center gap-4 p-4 bg-green-fade border border-green/20 rounded-xl">
+                        <div className="flex items-center gap-4 p-4 bg-[#EFF5F6] border border-[#163666]/20 rounded-xl">
                           {googleUser?.photoURL ? (
                             <img
                               src={googleUser.photoURL}
@@ -1625,7 +1625,7 @@ function openAdminDialog() {
                             id="btn-disconnect-calendar"
                             type="button"
                             onClick={onGoogleLogout}
-                            className="w-full text-center py-2.5 px-4 bg-red-fade text-red rounded-xl text-xs font-bold transition border border-red/20 cursor-pointer hover:opacity-85"
+                            className="w-full text-center py-2.5 px-4 bg-[#e05047] text-[#b2d3de] rounded-xl text-xs font-bold transition border border-[#e05047] cursor-pointer hover:bg-[#e05047] hover:text-[#b2d3de]"
                           >
                             Disconnect Google Calendar
                           </button>
@@ -1673,7 +1673,7 @@ function openAdminDialog() {
 
                     <div className="space-y-4">
                       <div className="flex gap-3">
-                        <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 text-xs font-semibold shrink-0">1</div>
+                        <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-[#163666] text-xs font-semibold shrink-0">01</div>
                         <div>
                           <h5 className="text-xs font-bold text-slate-700">Dynamic Blockout Engine</h5>
                           <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
@@ -1683,7 +1683,7 @@ function openAdminDialog() {
                       </div>
 
                       <div className="flex gap-3">
-                        <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 text-xs font-semibold shrink-0">2</div>
+                        <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-[#163666] text-xs font-semibold shrink-0">02</div>
                         <div>
                           <h5 className="text-xs font-bold text-slate-700">Instant Invites & Notifications</h5>
                           <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
@@ -1693,7 +1693,7 @@ function openAdminDialog() {
                       </div>
 
                       <div className="flex gap-3">
-                        <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 text-xs font-semibold shrink-0">3</div>
+                        <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-[#163666] text-xs font-semibold shrink-0">03</div>
                         <div>
                           <h5 className="text-xs font-bold text-slate-700">Seamless OAuth Security</h5>
                           <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
