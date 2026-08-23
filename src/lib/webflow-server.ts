@@ -144,13 +144,7 @@ export async function listBookingPageItems(live = true) {
 
 export async function findBookingPageItem(slug: string, live = true) {
   const items = await listBookingPageItems(live);
-  return (
-    items.find(
-      (item) =>
-        item.fieldData.slug === slug ||
-        item.fieldData['meeting-template'] === slug,
-    ) ?? null
-  );
+  return items.find((item) => item.fieldData.slug === slug) ?? null;
 }
 
 function assignedUser(item: WebflowCollectionItem): BookingPageAssignedUser {
@@ -238,7 +232,6 @@ function calendarTemplateFields(input: CalendarTemplateInput) {
   return {
     name: input.name,
     slug: slugify(input.slug || input.name),
-    'meeting-template': slugify(input.slug || input.name),
     'template-name': input.templateName,
     'meeting-template-eyebrow': input.eyebrow || '',
     'meeting-template-headline': input.headline || '',

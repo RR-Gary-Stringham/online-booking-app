@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Webflow template storage is not configured.' }, { status: 503 });
     }
     console.error('[webflow] Unable to save calendar template.', error);
-    return NextResponse.json({ error: 'The calendar template could not be saved.' }, { status: 502 });
+    return NextResponse.json({ error: 'The calendar template could not be saved.' }, { status: 500 });
   }
 }
 
