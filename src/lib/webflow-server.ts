@@ -252,10 +252,58 @@ function calendarTemplateFields(input: CalendarTemplateInput) {
 
 export async function saveCalendarTemplate(input: CalendarTemplateInput) {
   const collectionId = requireWebflowEnv('WEBFLOW_BOOKING_COLLECTION_ID');
-  const path = input.id ? `items/${input.id}/live` : 'items/live';
-  return webflowJson<WebflowCollectionItem>(`${WEBFLOW_API_BASE}/collections/${collectionId}/${path}`, {
+  const path = input.id ? `items/${input.id}` : 'items';
+  const item = await webflowJson<WebflowCollectionItem>(`${WEBFLOW_API_BASE}/collections/${collectionId}/${path}`, {
     method: input.id ? 'PATCH' : 'POST',
     body: JSON.stringify({ fieldData: calendarTemplateFields(input), isArchived: false, isDraft: false }),
+  });
+  await publishCalendarTemplate(item.id);
+  return item;
+}
+
+export async function ensureProviderBookingPage(profile: { email?: string; name?: string }) {
+  const email = profile.email?.trim().toLowerCase();
+  if (!email?.endsWith('@revrebel.io')) return null;
+
+  const pages = await listBookingPages(false);
+  const existingByEmail = pages.find((page) => page.isUserTemplate && page.googleCalendarId.toLowerCase() === email);
+  if (existingByEmail) return existingByEmail;
+
+  const nameParts = profile.name?.trim().split(/\s+/).filter(Boolean) ?? [];
+  const firstName = nameParts.shift() || email.split('@')[0];
+  const lastName = nameParts.join(' ');
+  const fullName = [firstName, lastName].filter(Boolean).join(' ');
+  const slug = providerSlug(fullName, email);
+  const existingBySlug = pages.find((page) => page.slug === slug);
+  if (existingBySlug) return existingBySlug;
+
+  await saveCalendarTemplate({
+    name: fullName,
+    slug,
+    templateName: `Book a Meeting with ${firstName}`,
+    eyebrow: 'Select a Meeting Option',
+    headline: `Book a Meeting with ${firstName}`,
+    subheadline: '',
+    description: '',
+    isUserTemplate: true,
+    firstName,
+    lastName,
+    googleCalendarId: email,
+    meetingDurations: [15, 30, 60, 90],
+    assignedUserIds: [],
+    useTheme: true,
+    themeOption: '56d54fcab5d4345689bd2ed4f91c86b2',
+    themeBackground: '#EFF5F6',
+    themeForeground: '#163666',
+  });
+  return (await listBookingPages(false)).find((page) => page.slug === slug) ?? null;
+}
+
+async function publishCalendarTemplate(id: string) {
+  const collectionId = requireWebflowEnv('WEBFLOW_BOOKING_COLLECTION_ID');
+  await webflowJson(`${WEBFLOW_API_BASE}/collections/${collectionId}/items/publish`, {
+    method: 'POST',
+    body: JSON.stringify({ itemIds: [id] }),
   });
 }
 
@@ -301,7 +349,7 @@ export async function uploadProviderImage(input: {
   if (!url) throw new Error('Webflow did not return a hosted asset URL.');
 
   const collectionId = requireWebflowEnv('WEBFLOW_BOOKING_COLLECTION_ID');
-  await webflowJson(`${WEBFLOW_API_BASE}/collections/${collectionId}/items/${item.id}/live?skipInvalidFiles=false`, {
+  await webflowJson(`${WEBFLOW_API_BASE}/collections/${collectionId}/items/${item.id}?skipInvalidFiles=false`, {
     method: 'PATCH',
     body: JSON.stringify({
       fieldData: {
@@ -309,6 +357,7 @@ export async function uploadProviderImage(input: {
       },
     }),
   });
+  await publishCalendarTemplate(item.id);
 
   return { fileId: asset.id, url };
 }

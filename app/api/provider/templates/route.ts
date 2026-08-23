@@ -59,7 +59,7 @@ async function authorization(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const auth = await authorization(request);
-    const templates = await listBookingPages(true);
+    const templates = await listBookingPages(false);
     return refreshProviderCookie(NextResponse.json({ templates }), auth.session, auth.storedSession);
   } catch (error) {
     if (error instanceof Error && error.message === 'unauthorized') {
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     const input = templateInput(await request.json() as Record<string, unknown>);
     if (!input) return NextResponse.json({ error: 'A name, slug, and at least one valid duration are required.' }, { status: 400 });
     await saveCalendarTemplate(input);
-    const templates = await listBookingPages(true);
+    const templates = await listBookingPages(false);
     return refreshProviderCookie(NextResponse.json({ templates }), auth.session, auth.storedSession);
   } catch (error) {
     if (error instanceof Error && error.message === 'unauthorized') {
@@ -99,7 +99,7 @@ export async function DELETE(request: NextRequest) {
     const id = cleanString(request.nextUrl.searchParams.get('id'), 64);
     if (!id) return NextResponse.json({ error: 'A template ID is required.' }, { status: 400 });
     await deleteCalendarTemplate(id);
-    const templates = await listBookingPages(true);
+    const templates = await listBookingPages(false);
     return refreshProviderCookie(NextResponse.json({ templates }), auth.session, auth.storedSession);
   } catch (error) {
     if (error instanceof Error && error.message === 'unauthorized') {

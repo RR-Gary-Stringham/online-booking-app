@@ -888,12 +888,22 @@ export default function AdminDashboard({
                   <div>
                     <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Assigned Users</label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-xl border border-slate-150 bg-white p-3">
-                      {calendarTemplates.filter((template) => template.isUserTemplate).map((user) => (
-                        <label key={user.id} className="flex items-center gap-2 text-xs text-slate-600">
-                          <input type="checkbox" checked={newTypeAssignedUserIds.includes(user.id)} onChange={() => setNewTypeAssignedUserIds((current) => current.includes(user.id) ? current.filter((id) => id !== user.id) : [...current, user.id])} />
-                          {[user.firstName, user.lastName].filter(Boolean).join(' ') || user.templateName}
-                        </label>
-                      ))}
+                      {calendarTemplates.filter((template) => template.isUserTemplate).map((user) => {
+                        const editingTemplate = calendarTemplates.find((template) => template.id === editingMeetingTypeId);
+                        const isOwnUserTemplate = editingTemplate?.isUserTemplate === true && user.id === editingTemplate.id;
+                        return (
+                          <label key={user.id} className={`flex items-center gap-2 text-xs text-slate-600 ${isOwnUserTemplate ? 'font-semibold' : ''}`}>
+                            <input
+                              type="checkbox"
+                              checked={isOwnUserTemplate || newTypeAssignedUserIds.includes(user.id)}
+                              disabled={isOwnUserTemplate}
+                              onChange={() => setNewTypeAssignedUserIds((current) => current.includes(user.id) ? current.filter((id) => id !== user.id) : [...current, user.id])}
+                            />
+                            {[user.firstName, user.lastName].filter(Boolean).join(' ') || user.templateName}
+                            {isOwnUserTemplate && <span className="text-[10px] text-slate-400">Your calendar</span>}
+                          </label>
+                        );
+                      })}
                       {!calendarTemplates.some((template) => template.isUserTemplate) && <span className="text-xs text-slate-400">No user templates are available yet.</span>}
                     </div>
                   </div>
