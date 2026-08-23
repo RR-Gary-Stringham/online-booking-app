@@ -2233,6 +2233,16 @@ body .app-shell {
     background-color: #eff5f6 !important;
 }
 
+.admin-workspace .rr-theme-color-selected {
+    border-color: #163666 !important;
+    box-shadow: 0 0 0 2px #fafafa, 0 0 0 4px #163666 !important;
+}
+
+.admin-workspace .rr-theme-color-check {
+    color: #163666 !important;
+    fill: #eff5f6;
+}
+
 .admin-workspace p,
 .admin-workspace label,
 .admin-workspace input,

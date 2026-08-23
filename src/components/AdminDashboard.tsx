@@ -6,6 +6,20 @@ import type { CalendarTemplate } from '../types';
 import { supportedTimeZones } from '../lib/date';
 import RRGoogleIcon from './RRGoogleIcon';
 
+async function readApiResponse<T extends { error?: string }>(response: Response, fallbackMessage: string): Promise<T> {
+  const responseText = await response.text();
+  let result: T;
+  try {
+    result = (responseText ? JSON.parse(responseText) : {}) as T;
+  } catch {
+    throw new Error(
+      `${fallbackMessage} The server returned ${response.status} ${response.statusText || 'an invalid response'} instead of JSON. Verify that APP_URL includes /app.`,
+    );
+  }
+  if (!response.ok) throw new Error(result.error || fallbackMessage);
+  return result;
+}
+
 interface AdminDashboardProps {
   settings: ProviderSettings;
   workingHours: WeeklyWorkingDay[];
@@ -116,9 +130,10 @@ export default function AdminDashboard({
       fetch(`${publicAppUrl.replace(/\/$/, '')}/api/provider/calendars`, { cache: 'no-store', signal: controller.signal }),
     ])
       .then(async ([templatesResponse, calendarsResponse]) => {
-        if (!templatesResponse.ok) throw new Error((await templatesResponse.json()).error || 'Templates could not be loaded.');
-        if (!calendarsResponse.ok) throw new Error((await calendarsResponse.json()).error || 'Google calendars could not be loaded.');
-        const [templatesResult, calendarsResult] = await Promise.all([templatesResponse.json(), calendarsResponse.json()]);
+        const [templatesResult, calendarsResult] = await Promise.all([
+          readApiResponse<{ templates?: CalendarTemplate[]; error?: string }>(templatesResponse, 'Templates could not be loaded.'),
+          readApiResponse<{ calendars?: Array<{ id: string; summary: string; primary: boolean; timeZone?: string }>; error?: string }>(calendarsResponse, 'Google calendars could not be loaded.'),
+        ]);
         setCalendarTemplates(templatesResult.templates ?? []);
         setGoogleCalendars(calendarsResult.calendars ?? []);
         setTemplateSyncStatus('idle');
@@ -175,13 +190,25 @@ export default function AdminDashboard({
     setImageUploadError('');
 
     try {
+      if (file.size > 4 * 1024 * 1024) {
+        throw new Error('The image must be smaller than 4MB.');
+      }
       const body = new FormData();
       body.append('image', file);
       const response = await fetch(`${publicAppUrl.replace(/\/$/, '')}/api/provider/profile-image`, {
         method: 'POST',
         body,
+        credentials: 'include',
       });
-      const result = await response.json() as { url?: string; error?: string };
+      const responseText = await response.text();
+      let result: { url?: string; error?: string } = {};
+      try {
+        result = responseText ? JSON.parse(responseText) as { url?: string; error?: string } : {};
+      } catch {
+        throw new Error(
+          `The upload endpoint returned ${response.status} ${response.statusText || 'an invalid response'}. Verify that APP_URL includes the application path (/app).`,
+        );
+      }
       if (!response.ok || !result.url) throw new Error(result.error || 'The image could not be uploaded.');
 
       setProfileImageUrl(result.url);
@@ -322,6 +349,7 @@ export default function AdminDashboard({
         yellow: { option: '54ead04968b81d364d6fc2c89eae383d', background: '#F3D232', foreground: '#163666' },
         orange: { option: 'cdffc34f624175663ffab0393cd115d5', background: '#FF695D', foreground: '#163666' },
         purple: { option: '018ee43bb3cc33642df6a915a42dabfa', background: '#94436C', foreground: '#FFB000' },
+        frost: { option: '56d54fcab5d4345689bd2ed4f91c86b2', background: '#EFF5F6', foreground: '#163666' },
       };
       const theme = themeByKey[newTypeColor] || themeByKey['dark-blue'];
       const response = await fetch(`${publicAppUrl.replace(/\/$/, '')}/api/provider/templates`, {
@@ -348,8 +376,7 @@ export default function AdminDashboard({
           themeForeground: theme.foreground,
         }),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Template could not be saved.');
+      const result = await readApiResponse<{ templates?: CalendarTemplate[]; error?: string }>(response, 'Template could not be saved.');
       setCalendarTemplates(result.templates ?? []);
       setTemplateSyncStatus('idle');
       resetMeetingTypeForm();
@@ -370,7 +397,7 @@ export default function AdminDashboard({
     setNewTypeDesc(template.description);
     setNewTypeAssignedUserIds(template.assignedUserIds);
     setNewTypeGoogleCalendarId(template.googleCalendarId);
-    const colorKey = Object.entries({ 'dark-blue': '#163666', green: '#00AEC7', 'light-blue': '#B2D3DE', yellow: '#F3D232', orange: '#FF695D', purple: '#94436C' })
+    const colorKey = Object.entries({ 'dark-blue': '#163666', green: '#00AEC7', 'light-blue': '#B2D3DE', yellow: '#F3D232', orange: '#FF695D', purple: '#94436C', frost: '#EFF5F6' })
       .find(([, value]) => value.toLowerCase() === template.themeBackground.toLowerCase())?.[0];
     setNewTypeColor(colorKey || 'dark-blue');
     setShowAddType(true);
@@ -382,8 +409,7 @@ export default function AdminDashboard({
       setTemplateSyncError('');
       try {
         const response = await fetch(`${publicAppUrl.replace(/\/$/, '')}/api/provider/templates?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Template could not be deleted.');
+        const result = await readApiResponse<{ templates?: CalendarTemplate[]; error?: string }>(response, 'Template could not be deleted.');
         setCalendarTemplates(result.templates ?? []);
         setTemplateSyncStatus('idle');
       } catch (error) {
@@ -895,16 +921,21 @@ export default function AdminDashboard({
                           { key: 'yellow', name: 'Yellow', varName: 'var(--color-yellow)' },
                           { key: 'orange', name: 'Orange', varName: 'var(--color-orange)' },
                           { key: 'purple', name: 'Purple', varName: 'var(--color-purple)' },
+                          { key: 'frost', name: 'Frost', varName: '#EFF5F6' },
                         ].map((c) => (
                           <button
                             key={c.key}
                             id={`color-btn-${c.key}`}
                             type="button"
                             onClick={() => setNewTypeColor(c.key)}
-                            className={`w-6 h-6 rounded-full border-2 transition-all ${newTypeColor === c.key ? 'border-slate-800 scale-110 shadow-xs' : 'border-transparent opacity-80'}`}
+                            aria-pressed={newTypeColor === c.key}
+                            className={`relative w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${newTypeColor === c.key ? 'rr-theme-color-selected scale-110 shadow-xs opacity-100' : 'border-transparent opacity-75 hover:opacity-100'}`}
                             style={{ backgroundColor: c.varName }}
                             title={c.name}
-                          />
+                          >
+                            {newTypeColor === c.key && <CheckCircle size={15} className="rr-theme-color-check" aria-hidden="true" />}
+                            <span className="sr-only">{c.name}{newTypeColor === c.key ? ' selected' : ''}</span>
+                          </button>
                         ))}
                       </div>
                     </div>
