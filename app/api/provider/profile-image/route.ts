@@ -9,6 +9,7 @@ import type { GoogleOAuthSession } from '@/src/lib/google-oauth-server';
 import {
   providerSlug,
   uploadProviderImage,
+  WebflowApiError,
   WebflowConfigurationError,
 } from '@/src/lib/webflow-server';
 
@@ -74,7 +75,14 @@ export async function POST(request: NextRequest) {
       console.warn('[webflow] Profile image upload is not configured.', error.message);
       return NextResponse.json({ error: 'Profile image uploads are not configured.' }, { status: 503 });
     }
+    if (error instanceof WebflowApiError && error.status === 403) {
+      console.warn('[webflow] Profile image upload lacks Webflow asset permission.');
+      return NextResponse.json(
+        { error: 'The booking application API key needs Webflow asset write access.' },
+        { status: 503 },
+      );
+    }
     console.error('[webflow] Unable to upload provider image.', error);
-    return NextResponse.json({ error: 'The profile image could not be saved.' }, { status: 502 });
+    return NextResponse.json({ error: 'The profile image could not be saved.' }, { status: 500 });
   }
 }

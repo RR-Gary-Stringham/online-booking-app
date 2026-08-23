@@ -31,14 +31,20 @@ export async function GET(request: NextRequest) {
   let returnUrl: URL | null = null;
 
   try {
-    returnUrl = appUrl('?google=connected');
+    returnUrl = appUrl('?workspace=true&google=connected');
 
     if (!code || !state || !expectedState || state !== expectedState) {
       return googleErrorRedirect(returnUrl, 'invalid-state');
     }
 
     const session = await exchangeAuthorizationCode(code);
-    await ensureProviderBookingPage(session);
+    try {
+      await ensureProviderBookingPage(session);
+    } catch (error) {
+      // Provider onboarding can be retried by the authenticated status route.
+      // A CMS or publishing failure must not invalidate a successful Google login.
+      console.error('[webflow] Provider onboarding after OAuth will be retried.', error);
+    }
     const response = NextResponse.redirect(returnUrl);
     response.cookies.set(GOOGLE_OAUTH_COOKIE, encryptGoogleSession(session), {
       httpOnly: true,

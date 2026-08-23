@@ -36,6 +36,13 @@ export class WebflowConfigurationError extends Error {
   }
 }
 
+export class WebflowApiError extends Error {
+  constructor(public readonly status: number) {
+    super(`Webflow API request failed with ${status}.`);
+    this.name = 'WebflowApiError';
+  }
+}
+
 function requireWebflowEnv(
   name: 'BOOKING_CALENDAR_API_KEY' | 'WEBFLOW_BOOKING_COLLECTION_ID' | 'WEBFLOW_SITE_ID',
 ) {
@@ -59,7 +66,7 @@ async function webflowJson<T>(url: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`Webflow API request failed with ${response.status}.`);
+    throw new WebflowApiError(response.status);
   }
 
   if (response.status === 204) return undefined as T;
