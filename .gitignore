@@ -9,3 +9,4 @@ coverage/
 .env*
 !.env.example
 example.css
+/helper_code

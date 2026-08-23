@@ -49,6 +49,7 @@ export interface ProviderSettings {
 }
 
 export interface BookingPageContent {
+  name: string;
   slug: string;
   meetingTemplate: string;
   firstName: string;
@@ -60,4 +61,25 @@ export interface BookingPageContent {
   description: string;
   isUserTemplate: boolean;
   userImageUrl?: string;
+  meetingDurations: number[];
+  useTheme: boolean;
+  themeOption: string;
+  themeBackground: string;
+  themeForeground: string;
+}
+
+export interface BookingPageAssignedUser {
+  id: string;
+  slug: string;
+  firstName: string;
+  lastName: string;
+  templateName: string;
+  googleCalendarId: string;
+}
+
+export interface CalendarTemplate extends BookingPageContent {
+  id: string;
+  googleCalendarId: string;
+  assignedUserIds: string[];
+  assignedUsers: BookingPageAssignedUser[];
 }

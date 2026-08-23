@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, Settings, Save, CheckCircle, XCircle, Trash2, Plus, Info, Copy, ClipboardCheck, ToggleLeft, ToggleRight, Edit, ArrowDown, ExternalLink, Mail, Workflow, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { WeeklyWorkingDay, MeetingType, Booking, ProviderSettings } from '../types';
+import type { CalendarTemplate } from '../types';
 import { supportedTimeZones } from '../lib/date';
 import RRGoogleIcon from './RRGoogleIcon';
 
@@ -83,14 +84,19 @@ export default function AdminDashboard({
   const [showAddType, setShowAddType] = useState(false);
   const [newTypeName, setNewTypeName] = useState('');
   const [newTypeSlug, setNewTypeSlug] = useState('');
-  const [newTypeDuration, setNewTypeDuration] = useState(30);
   const [newTypeEyebrow, setNewTypeEyebrow] = useState('');
   const [newTypeHeadline, setNewTypeHeadline] = useState('');
   const [newTypeSubheadline, setNewTypeSubheadline] = useState('');
   const [newTypeDesc, setNewTypeDesc] = useState('');
-  const [newTypeAssignedUsers, setNewTypeAssignedUsers] = useState('');
   const [newTypeColor, setNewTypeColor] = useState('dark-blue');
   const [editingMeetingTypeId, setEditingMeetingTypeId] = useState<string | null>(null);
+  const [calendarTemplates, setCalendarTemplates] = useState<CalendarTemplate[]>([]);
+  const [googleCalendars, setGoogleCalendars] = useState<Array<{ id: string; summary: string; primary: boolean; timeZone?: string }>>([]);
+  const [newTypeDurations, setNewTypeDurations] = useState<number[]>([30]);
+  const [newTypeAssignedUserIds, setNewTypeAssignedUserIds] = useState<string[]>([]);
+  const [newTypeGoogleCalendarId, setNewTypeGoogleCalendarId] = useState('');
+  const [templateSyncStatus, setTemplateSyncStatus] = useState<'idle' | 'loading' | 'saving' | 'error'>('idle');
+  const [templateSyncError, setTemplateSyncError] = useState('');
 
   // Local copy of schedule
   const [localHours, setLocalHours] = useState<WeeklyWorkingDay[]>([...workingHours]);
@@ -99,6 +105,31 @@ export default function AdminDashboard({
   const absoluteEmbedUrl = useMemo(() => {
     return `${publicAppUrl.replace(/\/$/, '')}?embed=true`;
   }, [publicAppUrl]);
+
+  useEffect(() => {
+    if (activeTab !== 'types' || !googleToken) return;
+    const controller = new AbortController();
+    setTemplateSyncStatus('loading');
+    setTemplateSyncError('');
+    Promise.all([
+      fetch(`${publicAppUrl.replace(/\/$/, '')}/api/provider/templates`, { cache: 'no-store', signal: controller.signal }),
+      fetch(`${publicAppUrl.replace(/\/$/, '')}/api/provider/calendars`, { cache: 'no-store', signal: controller.signal }),
+    ])
+      .then(async ([templatesResponse, calendarsResponse]) => {
+        if (!templatesResponse.ok) throw new Error((await templatesResponse.json()).error || 'Templates could not be loaded.');
+        if (!calendarsResponse.ok) throw new Error((await calendarsResponse.json()).error || 'Google calendars could not be loaded.');
+        const [templatesResult, calendarsResult] = await Promise.all([templatesResponse.json(), calendarsResponse.json()]);
+        setCalendarTemplates(templatesResult.templates ?? []);
+        setGoogleCalendars(calendarsResult.calendars ?? []);
+        setTemplateSyncStatus('idle');
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        setTemplateSyncStatus('error');
+        setTemplateSyncError(error instanceof Error ? error.message : 'Templates could not be loaded.');
+      });
+    return () => controller.abort();
+  }, [activeTab, googleToken, publicAppUrl]);
 
   const embedCodeSnippet = useMemo(() => {
     const shadowStyle = embedShadow ? 'box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);' : '';
@@ -265,60 +296,98 @@ export default function AdminDashboard({
   const resetMeetingTypeForm = () => {
     setNewTypeName('');
     setNewTypeSlug('');
-    setNewTypeDuration(30);
+    setNewTypeDurations([30]);
     setNewTypeEyebrow('');
     setNewTypeHeadline('');
     setNewTypeSubheadline('');
     setNewTypeDesc('');
-    setNewTypeAssignedUsers('');
+    setNewTypeAssignedUserIds([]);
+    setNewTypeGoogleCalendarId('');
     setNewTypeColor('dark-blue');
     setEditingMeetingTypeId(null);
     setShowAddType(false);
   };
 
-  const handleSaveMeetingType = (e: React.FormEvent) => {
+  const handleSaveMeetingType = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTypeName.trim()) return;
-
-    const savedType: MeetingType = {
-      id: editingMeetingTypeId || 'mt-' + Date.now(),
-      name: newTypeName,
-      slug: meetingTypeSlug(newTypeSlug || newTypeName),
-      duration: Number(newTypeDuration),
-      eyebrow: newTypeEyebrow,
-      headline: newTypeHeadline,
-      subheadline: newTypeSubheadline,
-      description: newTypeDesc,
-      assignedUsers: newTypeAssignedUsers.split(',').map((user) => user.trim()).filter(Boolean),
-      color: newTypeColor,
-      enabled: editingMeetingTypeId
-        ? meetingTypes.find((type) => type.id === editingMeetingTypeId)?.enabled ?? true
-        : true,
-    };
-
-    onUpdateMeetingTypes(editingMeetingTypeId
-      ? meetingTypes.map((type) => type.id === editingMeetingTypeId ? savedType : type)
-      : [...meetingTypes, savedType]);
-    resetMeetingTypeForm();
+    if (!newTypeName.trim() || newTypeDurations.length === 0) return;
+    setTemplateSyncStatus('saving');
+    setTemplateSyncError('');
+    try {
+      const current = calendarTemplates.find((template) => template.id === editingMeetingTypeId);
+      const themeByKey: Record<string, { option: string; background: string; foreground: string }> = {
+        'dark-blue': { option: 'de19b1a787631a7fa7465ac0ce660669', background: '#163666', foreground: '#B2D3DE' },
+        green: { option: '92b1e0fb7ba8cb271be2977f9680e91a', background: '#00AEC7', foreground: '#FF695D' },
+        'light-blue': { option: '65f7ca05d8d4bb4f63c4769d2207e4ce', background: '#B2D3DE', foreground: '#163666' },
+        yellow: { option: '54ead04968b81d364d6fc2c89eae383d', background: '#F3D232', foreground: '#163666' },
+        orange: { option: 'cdffc34f624175663ffab0393cd115d5', background: '#FF695D', foreground: '#163666' },
+        purple: { option: '018ee43bb3cc33642df6a915a42dabfa', background: '#94436C', foreground: '#FFB000' },
+      };
+      const theme = themeByKey[newTypeColor] || themeByKey['dark-blue'];
+      const response = await fetch(`${publicAppUrl.replace(/\/$/, '')}/api/provider/templates`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingMeetingTypeId || undefined,
+          name: newTypeName.trim(),
+          slug: meetingTypeSlug(newTypeSlug || newTypeName),
+          templateName: newTypeName.trim(),
+          eyebrow: newTypeEyebrow,
+          headline: newTypeHeadline,
+          subheadline: newTypeSubheadline,
+          description: newTypeDesc,
+          isUserTemplate: current?.isUserTemplate ?? false,
+          firstName: current?.firstName,
+          lastName: current?.lastName,
+          googleCalendarId: newTypeGoogleCalendarId,
+          meetingDurations: newTypeDurations,
+          assignedUserIds: newTypeAssignedUserIds,
+          useTheme: true,
+          themeOption: theme.option,
+          themeBackground: theme.background,
+          themeForeground: theme.foreground,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Template could not be saved.');
+      setCalendarTemplates(result.templates ?? []);
+      setTemplateSyncStatus('idle');
+      resetMeetingTypeForm();
+    } catch (error) {
+      setTemplateSyncStatus('error');
+      setTemplateSyncError(error instanceof Error ? error.message : 'Template could not be saved.');
+    }
   };
 
-  const handleEditMeetingType = (meetingType: MeetingType) => {
-    setEditingMeetingTypeId(meetingType.id);
-    setNewTypeName(meetingType.name);
-    setNewTypeSlug(meetingType.slug || meetingTypeSlug(meetingType.name));
-    setNewTypeDuration(meetingType.duration);
-    setNewTypeEyebrow(meetingType.eyebrow || 'Select a Meeting Option');
-    setNewTypeHeadline(meetingType.headline || meetingType.name);
-    setNewTypeSubheadline(meetingType.subheadline || '');
-    setNewTypeDesc(meetingType.description);
-    setNewTypeAssignedUsers((meetingType.assignedUsers || []).join(', '));
-    setNewTypeColor(meetingType.color);
+  const handleEditMeetingType = (template: CalendarTemplate) => {
+    setEditingMeetingTypeId(template.id);
+    setNewTypeName(template.templateName || template.name);
+    setNewTypeSlug(template.slug);
+    setNewTypeDurations(template.meetingDurations.length ? template.meetingDurations : [30]);
+    setNewTypeEyebrow(template.eyebrow);
+    setNewTypeHeadline(template.headline);
+    setNewTypeSubheadline(template.subheadline);
+    setNewTypeDesc(template.description);
+    setNewTypeAssignedUserIds(template.assignedUserIds);
+    setNewTypeGoogleCalendarId(template.googleCalendarId);
+    const colorKey = Object.entries({ 'dark-blue': '#163666', green: '#00AEC7', 'light-blue': '#B2D3DE', yellow: '#F3D232', orange: '#FF695D', purple: '#94436C' })
+      .find(([, value]) => value.toLowerCase() === template.themeBackground.toLowerCase())?.[0];
+    setNewTypeColor(colorKey || 'dark-blue');
     setShowAddType(true);
   };
 
-  const handleDeleteMeetingType = (id: string) => {
+  const handleDeleteMeetingType = async (id: string) => {
     if (confirm('Delete this meeting format? This cannot be undone.')) {
-      onUpdateMeetingTypes(meetingTypes.filter((mt) => mt.id !== id));
+      setTemplateSyncStatus('saving');
+      const response = await fetch(`${publicAppUrl.replace(/\/$/, '')}/api/provider/templates?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+      const result = await response.json();
+      if (response.ok) {
+        setCalendarTemplates(result.templates ?? []);
+        setTemplateSyncStatus('idle');
+      } else {
+        setTemplateSyncStatus('error');
+        setTemplateSyncError(result.error || 'Template could not be deleted.');
+      }
     }
   };
 
@@ -730,19 +799,15 @@ export default function AdminDashboard({
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Duration (Minutes)</label>
-                      <select
-                        id="new-type-duration"
-                        className="w-full px-4 py-2 text-xs font-medium border border-slate-150 bg-white rounded-xl focus:ring-4 focus:ring-slate-400/5 focus:outline-none cursor-pointer"
-                        value={newTypeDuration}
-                        onChange={(e) => setNewTypeDuration(Number(e.target.value))}
-                      >
-                        <option value={15}>15 Minutes</option>
-                        <option value={30}>30 Minutes</option>
-                        <option value={45}>45 Minutes</option>
-                        <option value={60}>60 Minutes</option>
-                        <option value={90}>90 Minutes</option>
-                      </select>
+                      <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Meeting Durations</label>
+                      <div className="flex flex-wrap gap-2 rounded-xl border border-slate-150 bg-white px-3 py-2">
+                        {[15, 30, 45, 60, 90].map((duration) => (
+                          <label key={duration} className="flex items-center gap-1 text-xs text-slate-600">
+                            <input type="checkbox" checked={newTypeDurations.includes(duration)} onChange={() => setNewTypeDurations((current) => current.includes(duration) ? current.filter((value) => value !== duration) : [...current, duration].sort((a, b) => a - b))} />
+                            {duration}
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -784,16 +849,24 @@ export default function AdminDashboard({
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Assigned Users</label>
-                      <input
-                        id="new-type-assigned-users"
-                        type="text"
-                        className="w-full px-4 py-2 text-xs border border-slate-150 bg-white rounded-xl focus:ring-4 focus:ring-slate-400/5 focus:outline-none"
-                        value={newTypeAssignedUsers}
-                        onChange={(e) => setNewTypeAssignedUsers(e.target.value)}
-                        placeholder="gary@revrebel.io, sarah@revrebel.io"
-                      />
-                      <p className="mt-1 text-[10px] text-slate-400">Separate multiple team members with commas.</p>
+                      <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Google Calendar</label>
+                      <select className="w-full px-4 py-2 text-xs border border-slate-150 bg-white rounded-xl" value={newTypeGoogleCalendarId} onChange={(e) => setNewTypeGoogleCalendarId(e.target.value)}>
+                        <option value="">Select a destination calendar</option>
+                        {googleCalendars.map((calendar) => <option key={calendar.id} value={calendar.id}>{calendar.summary}{calendar.primary ? ' (Primary)' : ''}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Assigned Users</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-xl border border-slate-150 bg-white p-3">
+                      {calendarTemplates.filter((template) => template.isUserTemplate).map((user) => (
+                        <label key={user.id} className="flex items-center gap-2 text-xs text-slate-600">
+                          <input type="checkbox" checked={newTypeAssignedUserIds.includes(user.id)} onChange={() => setNewTypeAssignedUserIds((current) => current.includes(user.id) ? current.filter((id) => id !== user.id) : [...current, user.id])} />
+                          {[user.firstName, user.lastName].filter(Boolean).join(' ') || user.templateName}
+                        </label>
+                      ))}
+                      {!calendarTemplates.some((template) => template.isUserTemplate) && <span className="text-xs text-slate-400">No user templates are available yet.</span>}
                     </div>
                   </div>
 
@@ -848,8 +921,9 @@ export default function AdminDashboard({
                 </motion.form>
               )}
 
+              {templateSyncError && <p className="text-xs text-red">{templateSyncError}</p>}
               <div className="space-y-3.5 max-h-[350px] overflow-y-auto pr-1">
-                {meetingTypes.map((mt) => (
+                {calendarTemplates.map((mt) => (
                   <div
                     key={mt.id}
                     className="p-4 rounded-2xl border border-slate-150 bg-white transition flex items-center justify-between gap-4 shadow-3xs"
@@ -859,31 +933,18 @@ export default function AdminDashboard({
                         className={`mt-1.5 w-3 h-3 rounded-full`}
                         style={{
                           backgroundColor:
-                            mt.color === 'dark-blue' ? 'var(--color-dark-blue)' :
-                            mt.color === 'dark-green' ? 'var(--color-dark-green)' :
-                            mt.color === 'green' ? 'var(--color-green)' :
-                            mt.color === 'light-green' ? 'var(--color-light-green)' :
-                            mt.color === 'light-blue' ? 'var(--color-light-blue)' :
-                            mt.color === 'yellow' ? 'var(--color-yellow)' :
-                            mt.color === 'orange' ? 'var(--color-orange)' :
-                            mt.color === 'purple' ? 'var(--color-purple)' :
-                            mt.color === 'indigo' ? '#4f46e5' :
-                            mt.color === 'emerald' ? '#059669' :
-                            mt.color === 'amber' ? '#d97706' :
-                            mt.color === 'rose' ? '#e11d48' :
-                            mt.color === 'teal' ? '#0d9488' :
-                            'var(--color-dark-blue)'
+                            mt.themeBackground || 'var(--color-dark-blue)'
                         }}
                       />
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-800">{mt.name}</span>
-                          <span className="text-[10px] font-mono font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">{mt.duration} mins</span>
+                          <span className="text-xs font-bold text-slate-800">{mt.templateName || mt.name}</span>
+                          <span className="text-[10px] font-mono font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">{mt.meetingDurations.join(', ')} mins</span>
                         </div>
                         <p className="text-[10px] font-mono text-slate-400 mt-1">/{mt.slug || meetingTypeSlug(mt.name)}</p>
                         <p className="text-[11px] text-slate-500 mt-1 max-w-lg leading-relaxed">{mt.description}</p>
-                        {!!mt.assignedUsers?.length && (
-                          <p className="text-[10px] text-slate-400 mt-1">Assigned: {mt.assignedUsers.join(', ')}</p>
+                        {!!mt.assignedUsers.length && (
+                          <p className="text-[10px] text-slate-400 mt-1">Assigned: {mt.assignedUsers.map((user) => [user.firstName, user.lastName].filter(Boolean).join(' ') || user.templateName).join(', ')}</p>
                         )}
                       </div>
                     </div>
@@ -900,18 +961,6 @@ export default function AdminDashboard({
                       </button>
 
                       <button
-                        id={`btn-toggle-mt-${mt.id}`}
-                        onClick={() => handleToggleMeetingType(mt.id)}
-                        className={`p-1 text-slate-400 hover:text-slate-600 transition`}
-                      >
-                        {mt.enabled ? (
-                          <ToggleRight size={24} className="text-slate-800" />
-                        ) : (
-                          <ToggleLeft size={24} />
-                        )}
-                      </button>
-
-                      <button
                         id={`btn-del-mt-${mt.id}`}
                         onClick={() => handleDeleteMeetingType(mt.id)}
                         className="p-1 bg-red-50 text-red hover:bg-red hover:text-red-inverse rounded-lg transition"
@@ -923,6 +972,7 @@ export default function AdminDashboard({
                     </div>
                   </div>
                 ))}
+                {templateSyncStatus === 'loading' && <p className="text-xs text-slate-400">Loading CMS templates and calendars…</p>}
               </div>
             </motion.div>
           )}
