@@ -2139,9 +2139,9 @@ main > * {
 }
 
 .booking-widget.is-confirmation-view .confirmation-intro {
-    color: #35b8c5 !important;
+    color: #00a6b6 !important;
     font-family: "Roboto", Arial, Helvetica, sans-serif !important;
-    font-weight: 300 !important;
+    font-weight: 400 !important;
 }
 
 .booking-widget.is-confirmation-view .confirmation-message,

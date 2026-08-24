@@ -220,7 +220,12 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
         providerTimezone: newBookingData.providerTimezone || data.settings.timezone,
       }),
     });
-    const bookingResult = await bookingResponse.json() as { success?: boolean; error?: string };
+    const bookingResult = await bookingResponse.json() as {
+      success?: boolean;
+      error?: string;
+      manageUrl?: string;
+      cancelUrl?: string;
+    };
     if (!bookingResponse.ok || !bookingResult.success) {
       throw new Error(bookingResult.error || 'The meeting could not be added to Google Calendar.');
     }
@@ -239,9 +244,9 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
     setData(updated);
     saveWidgetData(updated);
 
-    // Dispatch beautiful branded notifications in real-time if Brevo API is configured
-    if (data.settings.brevoApiKey) {
-      try {
+    // The server owns the Brevo credential and reports a configuration error
+    // without exposing it when transactional email is unavailable.
+    try {
         const durationMinutes = meetingType ? meetingType.duration : 15;
         
         // Build robust human-readable date representation
@@ -275,11 +280,12 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
             brevoSenderEmail: data.settings.brevoSenderEmail,
             brevoSenderName: data.settings.brevoSenderName,
             customNotes: newBookingData.clientNotes,
+            manageUrl: bookingResult.manageUrl,
+            cancelUrl: bookingResult.cancelUrl,
           })
         });
-      } catch (err) {
-        console.error("Failed to dispatch Brevo transactional email:", err);
-      }
+    } catch (err) {
+      console.error("Failed to dispatch Brevo transactional email:", err);
     }
   };
 

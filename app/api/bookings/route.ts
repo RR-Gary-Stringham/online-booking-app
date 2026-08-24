@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { zonedDateTimeToUtc } from '@/src/lib/date';
 import { insertDelegatedGoogleEvent } from '@/src/lib/google-service-account';
+import { appUrl } from '@/src/lib/app-url';
+import { createBookingManagementToken } from '@/src/lib/booking-management-token';
 import { listBookingPages, WebflowConfigurationError } from '@/src/lib/webflow-server';
 
 export const dynamic = 'force-dynamic';
@@ -68,7 +70,9 @@ export async function POST(request: NextRequest) {
     });
 
     const blockCalendars = [...new Set(assignedCalendarIds)].filter((calendarId) => calendarId !== destinationCalendarId);
-    await Promise.all(blockCalendars.map((calendarId) => insertDelegatedGoogleEvent({
+    const blockEvents = await Promise.all(blockCalendars.map(async (calendarId) => ({
+      calendarId,
+      event: await insertDelegatedGoogleEvent({
       subject: calendarId,
       calendarId,
       summary: eventSummary,
@@ -76,13 +80,38 @@ export async function POST(request: NextRequest) {
       startIso: start.toISOString(),
       endIso: end.toISOString(),
       timeZone,
+      }),
     })));
+
+    const managementToken = createBookingManagementToken({
+      version: 1,
+      slug,
+      clientName,
+      clientEmail,
+      summary: eventSummary,
+      startIso: start.toISOString(),
+      endIso: end.toISOString(),
+      timeZone,
+      events: [
+        { subject: delegationSubject, calendarId: destinationCalendarId, eventId: primaryEvent.id, notifyAttendee: true },
+        ...blockEvents.map(({ calendarId, event }) => ({
+          subject: calendarId,
+          calendarId,
+          eventId: event.id,
+          notifyAttendee: false,
+        })),
+      ],
+      expiresAt: Math.max(end.getTime() + 30 * 24 * 60 * 60_000, Date.now() + 90 * 24 * 60 * 60_000),
+    });
+    const manageUrl = appUrl(`/manage/${managementToken}`).toString();
 
     return NextResponse.json({
       success: true,
       eventId: primaryEvent.id,
       eventUrl: primaryEvent.htmlLink,
       meetingUrl: primaryEvent.hangoutLink,
+      manageUrl,
+      cancelUrl: `${manageUrl}#cancel`,
     });
   } catch (error) {
     if (error instanceof WebflowConfigurationError) {

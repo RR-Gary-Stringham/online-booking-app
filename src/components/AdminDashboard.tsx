@@ -1397,7 +1397,7 @@ export default function AdminDashboard({
                           id="btn-trigger-test"
                           disabled={testStatus === 'loading'}
                           onClick={handleSendTestEmail}
-                          className="px-3 py-1.5 rounded-xl text-[10px] font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 disabled:opacity-50 transition"
+                          className="px-3 py-1.5 rounded-xl text-[10px] font-bold bg-slate-500 text-[#B2D3dE] hover:bg-[#eff5f6] disabled:opacity-50 transition"
                         >
                           {testStatus === 'loading' ? 'Sending...' : 'Send Test'}
                         </button>

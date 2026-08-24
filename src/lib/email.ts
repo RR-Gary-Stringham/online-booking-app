@@ -7,6 +7,8 @@ export interface ConfirmationEmailInput {
   meetingDuration: number;
   referenceId: string;
   customNotes?: string;
+  manageUrl?: string;
+  cancelUrl?: string;
 }
 
 const escapeHtml = (value: string) =>
@@ -25,6 +27,8 @@ export const renderConfirmationEmail = (input: ConfirmationEmailInput) => {
   const dateTime = escapeHtml(input.dateTime);
   const referenceId = escapeHtml(input.referenceId);
   const customNotes = input.customNotes ? escapeHtml(input.customNotes) : '';
+  const manageUrl = input.manageUrl ? escapeHtml(input.manageUrl) : '';
+  const cancelUrl = input.cancelUrl ? escapeHtml(input.cancelUrl) : '';
 
   return `<!doctype html>
 <html lang="en">
@@ -49,6 +53,10 @@ export const renderConfirmationEmail = (input: ConfirmationEmailInput) => {
             <p style="margin:0"><strong>Reference:</strong> ${referenceId}</p>
           </div>
           ${customNotes ? `<p style="font-size:13px;line-height:1.55"><strong>Notes:</strong> ${customNotes}</p>` : ''}
+          ${manageUrl ? `<div style="margin-top:30px">
+            <a href="${manageUrl}" style="display:inline-block;padding:16px 18px;border:3px solid #163666;color:#163666;font-family:Arial Narrow,Arial,sans-serif;font-weight:700;letter-spacing:.05em;text-decoration:none;text-transform:uppercase">Manage Meeting</a>
+            ${cancelUrl ? `<p style="margin:16px 0 0;font-size:12px"><a href="${cancelUrl}" style="color:#163666">Cancel this meeting</a></p>` : ''}
+          </div>` : ''}
         </div>
       </div>
     </div>
