@@ -971,8 +971,13 @@ export default function AdminDashboard({
                             className="w-14 h-14 rounded-full object-cover border border-slate-150"
                           />
                         )}
-                        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleTemplateImageUpload} disabled={templateImageStatus === 'uploading'} />
-                        {templateImageStatus === 'uploading' && <span className="text-xs text-slate-400">Uploading…</span>}
+                        <div className="space-y-2">
+                          <label className={`rr-upload-image-button ${templateImageStatus === 'uploading' ? 'is-disabled' : ''}`}>
+                            {templateImageStatus === 'uploading' ? 'Uploading…' : 'Upload Image'}
+                            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleTemplateImageUpload} disabled={templateImageStatus === 'uploading'} />
+                          </label>
+                          <p className="text-[10px] text-slate-400">JPEG, PNG, WebP, or GIF. Maximum 4MB.</p>
+                        </div>
                       </div>
                     ) : (
                       <p className="text-xs text-slate-400">Save the new template first, then edit it to upload an image.</p>
@@ -1127,12 +1132,12 @@ export default function AdminDashboard({
                           </div>
                         )}
                         <div className="space-y-2">
-                          <label className="rr-button-outline cursor-pointer">
+                          <label className={`rr-upload-image-button ${imageUploadStatus === 'uploading' ? 'is-disabled' : ''}`}>
                             {imageUploadStatus === 'uploading' ? 'Uploading…' : 'Upload Image'}
                             <input
                               type="file"
                               accept="image/jpeg,image/png,image/webp,image/gif"
-                              className="sr-only"
+                              className="hidden"
                               disabled={imageUploadStatus === 'uploading'}
                               onChange={handleProfileImageUpload}
                             />

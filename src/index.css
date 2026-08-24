@@ -2251,6 +2251,40 @@ body .app-shell {
     fill: #eff5f6;
 }
 
+.admin-workspace .rr-upload-image-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0.65rem 1.15rem;
+    color: #163666 !important;
+    background: #eff5f6 !important;
+    border: 3px solid #163666 !important;
+    border-radius: 0 !important;
+    font-family: "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif !important;
+    font-size: 1rem;
+    font-weight: 700 !important;
+    line-height: 1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 150ms ease, background-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.admin-workspace .rr-upload-image-button:hover {
+    color: #b2d3de !important;
+    background: #163666 !important;
+    box-shadow: 4px 4px 0 #00a6b6 !important;
+    transform: translate(-2px, -2px);
+}
+
+.admin-workspace .rr-upload-image-button.is-disabled {
+    opacity: 0.55;
+    cursor: wait;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
 .admin-workspace p,
 .admin-workspace label,
 .admin-workspace input,

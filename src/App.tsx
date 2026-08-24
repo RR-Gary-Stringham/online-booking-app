@@ -12,6 +12,8 @@ import type { CalendarEvent } from './lib/googleCalendar';
 const appApiUrl = (publicAppUrl: string, path: string) =>
   `${publicAppUrl.replace(/\/$/, '')}${path}`;
 
+const DEFAULT_BOOKING_CALENDAR_SLUG = 'revrebel-helpdesk';
+
 export default function App({ publicAppUrl }: { publicAppUrl: string }) {
   // Check if iframe rendering mode
   const [isEmbedMode, setIsEmbedMode] = useState(false);
@@ -69,7 +71,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
       const urlParams = new URLSearchParams(window.location.search);
       const embedMode = urlParams.get('embed') === 'true';
       setIsEmbedMode(embedMode);
-      setCalendarSlug(urlParams.get('calendar')?.trim().toLowerCase() ?? '');
+      setCalendarSlug(urlParams.get('calendar')?.trim().toLowerCase() || DEFAULT_BOOKING_CALENDAR_SLUG);
       if (embedMode) setViewMode('preview');
       else if (urlParams.get('google') === 'connected') setViewMode('admin');
     };
