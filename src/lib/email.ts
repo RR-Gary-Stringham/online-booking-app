@@ -9,6 +9,11 @@ export interface ConfirmationEmailInput {
   customNotes?: string;
   manageUrl?: string;
   cancelUrl?: string;
+  rescheduleUrl?: string;
+  meetingTime?: string;
+  meetingLink?: string;
+  outlookCalUrl?: string;
+  googleCalUrl?: string;
 }
 
 const escapeHtml = (value: string) =>

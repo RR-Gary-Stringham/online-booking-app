@@ -225,6 +225,11 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
       error?: string;
       manageUrl?: string;
       cancelUrl?: string;
+      rescheduleUrl?: string;
+      startIso?: string;
+      meetingUrl?: string;
+      outlookCalUrl?: string;
+      googleCalUrl?: string;
     };
     if (!bookingResponse.ok || !bookingResult.success) {
       throw new Error(bookingResult.error || 'The meeting could not be added to Google Calendar.');
@@ -282,6 +287,11 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
             customNotes: newBookingData.clientNotes,
             manageUrl: bookingResult.manageUrl,
             cancelUrl: bookingResult.cancelUrl,
+            rescheduleUrl: bookingResult.rescheduleUrl,
+            meetingTime: bookingResult.startIso,
+            meetingLink: bookingResult.meetingUrl,
+            outlookCalUrl: bookingResult.outlookCalUrl,
+            googleCalUrl: bookingResult.googleCalUrl,
           })
         });
     } catch (err) {

@@ -104,6 +104,18 @@ export async function POST(request: NextRequest) {
       expiresAt: Math.max(end.getTime() + 30 * 24 * 60 * 60_000, Date.now() + 90 * 24 * 60 * 60_000),
     });
     const manageUrl = appUrl(`/manage/${managementToken}`).toString();
+    const rescheduleUrl = appUrl(`/?calendar=${encodeURIComponent(slug)}`).toString();
+    const compactUtc = (value: Date) => value.toISOString().replace(/[-:]/g, '').replace('.000', '');
+    const googleCalUrl = new URL('https://calendar.google.com/calendar/render');
+    googleCalUrl.searchParams.set('action', 'TEMPLATE');
+    googleCalUrl.searchParams.set('text', eventSummary);
+    googleCalUrl.searchParams.set('dates', `${compactUtc(start)}/${compactUtc(end)}`);
+    googleCalUrl.searchParams.set('details', description);
+    const outlookCalUrl = new URL('https://outlook.office.com/calendar/0/deeplink/compose');
+    outlookCalUrl.searchParams.set('subject', eventSummary);
+    outlookCalUrl.searchParams.set('startdt', start.toISOString());
+    outlookCalUrl.searchParams.set('enddt', end.toISOString());
+    outlookCalUrl.searchParams.set('body', description);
 
     return NextResponse.json({
       success: true,
@@ -112,6 +124,10 @@ export async function POST(request: NextRequest) {
       meetingUrl: primaryEvent.hangoutLink,
       manageUrl,
       cancelUrl: `${manageUrl}#cancel`,
+      rescheduleUrl,
+      startIso: start.toISOString(),
+      outlookCalUrl: outlookCalUrl.toString(),
+      googleCalUrl: googleCalUrl.toString(),
     });
   } catch (error) {
     if (error instanceof WebflowConfigurationError) {
