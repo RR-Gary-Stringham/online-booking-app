@@ -218,6 +218,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
         date: newBookingData.date,
         time: newBookingData.time,
         providerTimezone: newBookingData.providerTimezone || data.settings.timezone,
+        rescheduleToken: new URLSearchParams(window.location.search).get('reschedule') || undefined,
       }),
     });
     const bookingResult = await bookingResponse.json() as {
@@ -230,6 +231,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
       meetingUrl?: string;
       outlookCalUrl?: string;
       googleCalUrl?: string;
+      emailKind?: 'confirmation' | 'change';
     };
     if (!bookingResponse.ok || !bookingResult.success) {
       throw new Error(bookingResult.error || 'The meeting could not be added to Google Calendar.');
@@ -292,6 +294,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
             meetingLink: bookingResult.meetingUrl,
             outlookCalUrl: bookingResult.outlookCalUrl,
             googleCalUrl: bookingResult.googleCalUrl,
+            emailKind: bookingResult.emailKind,
           })
         });
     } catch (err) {
