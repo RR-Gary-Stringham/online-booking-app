@@ -236,11 +236,6 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
     if (!bookingResponse.ok || !bookingResult.success) {
       throw new Error(bookingResult.error || 'The meeting could not be added to Google Calendar.');
     }
-    if (bookingResult.emailKind === 'change') {
-      const currentUrl = new URL(window.location.href);
-      currentUrl.searchParams.delete('reschedule');
-      window.history.replaceState({}, '', currentUrl);
-    }
 
     const bookingId = 'b-' + Math.floor(Math.random() * 10000000);
     const newBooking: Booking = {

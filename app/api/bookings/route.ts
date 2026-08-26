@@ -41,11 +41,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'That meeting option is unavailable.' }, { status: 404 });
     }
     const previousBooking = rescheduleToken ? readBookingManagementToken(rescheduleToken) : null;
-    if (rescheduleToken && (
-      !previousBooking ||
-      previousBooking.clientEmail.toLowerCase() !== clientEmail ||
-      previousBooking.slug !== slug
-    )) {
+    if (rescheduleToken && (!previousBooking || previousBooking.clientEmail.toLowerCase() !== clientEmail)) {
       return NextResponse.json({ error: 'The reschedule link is invalid or expired.' }, { status: 400 });
     }
 
@@ -66,23 +62,6 @@ export async function POST(request: NextRequest) {
     const eventSummary = `${page.templateName || page.name} — ${clientName}`;
     const description = [clientNotes, `Booked through REVREBEL (${slug}).`].filter(Boolean).join('\n\n');
     const providerName = [page.firstName, page.lastName].filter(Boolean).join(' ') || page.templateName || page.name || 'REVREBEL';
-
-    // Consume the previous event before creating its replacement. Google Calendar's
-    // successful primary-event deletion is the single-use lock for this stateless token.
-    if (previousBooking) {
-      const secondary = previousBooking.events.filter((event) => !event.notifyAttendee);
-      const primary = previousBooking.events.filter((event) => event.notifyAttendee);
-      await Promise.all(secondary.map((event) => deleteDelegatedGoogleEvent(event)));
-      const primaryDeletionResults = await Promise.all(primary.map((event) => (
-        deleteDelegatedGoogleEvent({ ...event, notifyAttendee: false })
-      )));
-      if (primaryDeletionResults.length === 0 || !primaryDeletionResults.some(Boolean)) {
-        return NextResponse.json(
-          { error: 'This reschedule link has already been used.' },
-          { status: 409 },
-        );
-      }
-    }
 
     const primaryEvent = await insertDelegatedGoogleEvent({
       subject: delegationSubject,
@@ -144,6 +123,13 @@ export async function POST(request: NextRequest) {
     outlookCalUrl.searchParams.set('startdt', start.toISOString());
     outlookCalUrl.searchParams.set('enddt', end.toISOString());
     outlookCalUrl.searchParams.set('body', description);
+
+    if (previousBooking) {
+      const secondary = previousBooking.events.filter((event) => !event.notifyAttendee);
+      const primary = previousBooking.events.filter((event) => event.notifyAttendee);
+      await Promise.all(secondary.map((event) => deleteDelegatedGoogleEvent(event)));
+      await Promise.all(primary.map((event) => deleteDelegatedGoogleEvent(event)));
+    }
 
     return NextResponse.json({
       success: true,
