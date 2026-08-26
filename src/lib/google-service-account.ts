@@ -218,6 +218,7 @@ export async function deleteDelegatedGoogleEvent(input: {
     `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.eventId)}?${params}`,
     { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` }, cache: 'no-store' },
   );
-  if (response.status === 404 || response.status === 410) return;
+  if (response.status === 404 || response.status === 410) return false;
   if (!response.ok) throw new Error(`Google event cancellation failed with ${response.status}.`);
+  return true;
 }
