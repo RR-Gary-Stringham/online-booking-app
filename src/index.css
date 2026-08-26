@@ -1516,6 +1516,30 @@ main > [class*="bg-white"][class*="border"] > div:first-child > div:first-child 
     box-shadow: none !important;
 }
 
+/* The host webpage owns all framing when the scheduler is embedded. */
+html.booking-embed-document,
+body.booking-embed-document,
+body.booking-embed-document #root {
+    min-height: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+body.booking-embed-document::before {
+    display: none !important;
+}
+
+.booking-widget.is-embed-view {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.booking-widget.is-embed-view .booking-widget-header {
+    border-bottom: 0 !important;
+}
+
 .booking-widget,
 .booking-widget * {
     color: #163666;

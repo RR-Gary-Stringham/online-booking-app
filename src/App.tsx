@@ -153,6 +153,18 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
   }, [googleUser, isEmbedMode]);
 
   useEffect(() => {
+    if (isEmbedMode || !googleUser?.displayName) return;
+    const requestedCalendar = new URLSearchParams(window.location.search).get('calendar');
+    if (requestedCalendar) return;
+    const userSlug = googleUser.displayName
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    if (userSlug) setCalendarSlug(userSlug);
+  }, [googleUser?.displayName, isEmbedMode]);
+
+  useEffect(() => {
     if (!isEmbedMode || window.parent === window) return;
 
     const reportHeight = () => {

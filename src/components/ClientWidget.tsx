@@ -385,16 +385,26 @@ export default function ClientWidget({
     }
   }, [settings.colorTheme]);
 
+  useEffect(() => {
+    if (!isEmbedPreview) return;
+    document.documentElement.classList.add('booking-embed-document');
+    document.body.classList.add('booking-embed-document');
+    return () => {
+      document.documentElement.classList.remove('booking-embed-document');
+      document.body.classList.remove('booking-embed-document');
+    };
+  }, [isEmbedPreview]);
+
   return (
     <main
       style={{
         '--primary': primaryColorVar,
         '--primary-foreground': primaryForegroundVar
       } as React.CSSProperties}
-      className={`booking-widget w-full mx-auto overflow-hidden transition-all duration-500 ease-fluid relative ${step === 'success' ? 'is-confirmation-view' : ''} ${isEmbedPreview ? 'max-w-none' : 'max-w-5xl'}`}
+      className={`booking-widget w-full mx-auto overflow-hidden transition-all duration-500 ease-fluid relative ${step === 'success' ? 'is-confirmation-view' : ''} ${isEmbedPreview ? 'is-embed-view max-w-none' : 'max-w-5xl'}`}
     >
       {/* Fine inner bezel outline */}
-      <div className="absolute inset-0 border border-white pointer-events-none rounded-[56px] m-[1px]"></div>
+      {!isEmbedPreview && <div className="absolute inset-0 border border-white pointer-events-none rounded-[56px] m-[1px]"></div>}
       
       <div className="p-6 md:p-10 relative z-10">
         
