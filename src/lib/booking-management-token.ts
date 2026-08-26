@@ -14,6 +14,7 @@ export interface BookingManagementPayload {
   slug: string;
   clientName: string;
   clientEmail: string;
+  providerName: string;
   summary: string;
   startIso: string;
   endIso: string;

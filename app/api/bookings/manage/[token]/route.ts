@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { deleteDelegatedGoogleEvent, getDelegatedGoogleEvent } from '@/src/lib/google-service-account';
 import { readBookingManagementToken } from '@/src/lib/booking-management-token';
+import { appUrl } from '@/src/lib/app-url';
+import { sendBrevoBookingEmail } from '@/src/lib/brevo-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +41,30 @@ export async function DELETE(_request: Request, context: Context) {
     const primary = booking.events.filter((event) => event.notifyAttendee);
     await Promise.all(secondary.map((event) => deleteDelegatedGoogleEvent(event)));
     await Promise.all(primary.map((event) => deleteDelegatedGoogleEvent(event)));
-    return NextResponse.json({ success: true });
+    const manageUrl = appUrl(`/manage/${token}`).toString();
+    const rescheduleUrl = appUrl(`/?calendar=${encodeURIComponent(booking.slug)}&reschedule=${encodeURIComponent(token)}`).toString();
+    try {
+      await sendBrevoBookingEmail({
+        kind: 'cancellation',
+        recipientEmail: booking.clientEmail,
+        recipientName: booking.clientName,
+        params: {
+          FIRST_NAME: booking.clientName.trim().split(/\s+/)[0] || 'Partner',
+          FIRSTNAME: booking.clientName.trim().split(/\s+/)[0] || 'Partner',
+          INTERNAL_NAME: booking.providerName || 'REVREBEL',
+          MEETING_TIME: booking.startIso,
+          MEETING_LINK: '',
+          CANCEL_LINK: manageUrl,
+          RESCHEDULE_LINK: rescheduleUrl,
+          OUTLOOK_CAL: '',
+          GOOGLE_CAL: '',
+        },
+      });
+      return NextResponse.json({ success: true, emailSent: true });
+    } catch (emailError) {
+      console.error('[booking-management] Meeting cancelled, but cancellation email failed.', emailError);
+      return NextResponse.json({ success: true, emailSent: false });
+    }
   } catch (error) {
     console.error('[booking-management] Unable to cancel event.', error);
     return NextResponse.json({ error: 'The meeting could not be cancelled. Please try again.' }, { status: 503 });

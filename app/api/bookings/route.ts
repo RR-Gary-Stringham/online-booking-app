@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { zonedDateTimeToUtc } from '@/src/lib/date';
-import { insertDelegatedGoogleEvent } from '@/src/lib/google-service-account';
+import { deleteDelegatedGoogleEvent, insertDelegatedGoogleEvent } from '@/src/lib/google-service-account';
 import { appUrl } from '@/src/lib/app-url';
-import { createBookingManagementToken } from '@/src/lib/booking-management-token';
+import { createBookingManagementToken, readBookingManagementToken } from '@/src/lib/booking-management-token';
 import { listBookingPages, WebflowConfigurationError } from '@/src/lib/webflow-server';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
     const time = stringValue(body.time, 5);
     const timeZone = stringValue(body.providerTimezone, 128);
     const duration = Number(body.duration);
+    const rescheduleToken = stringValue(body.rescheduleToken, 10000);
 
     if (!/^[a-z0-9-]+$/.test(slug) || !clientName || !clientEmail.includes('@') ||
       !/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time) ||
@@ -38,6 +39,10 @@ export async function POST(request: NextRequest) {
     const page = pages.find((candidate) => candidate.slug === slug);
     if (!page || !page.meetingDurations.includes(duration)) {
       return NextResponse.json({ error: 'That meeting option is unavailable.' }, { status: 404 });
+    }
+    const previousBooking = rescheduleToken ? readBookingManagementToken(rescheduleToken) : null;
+    if (rescheduleToken && (!previousBooking || previousBooking.clientEmail.toLowerCase() !== clientEmail || previousBooking.slug !== slug)) {
+      return NextResponse.json({ error: 'The reschedule link is invalid or expired.' }, { status: 400 });
     }
 
     const start = zonedDateTimeToUtc(date, time, timeZone);
@@ -56,6 +61,7 @@ export async function POST(request: NextRequest) {
       : assignedCalendarIds[0] || 'helpdesk@revrebel.io';
     const eventSummary = `${page.templateName || page.name} — ${clientName}`;
     const description = [clientNotes, `Booked through REVREBEL (${slug}).`].filter(Boolean).join('\n\n');
+    const providerName = [page.firstName, page.lastName].filter(Boolean).join(' ') || page.templateName || page.name || 'REVREBEL';
 
     const primaryEvent = await insertDelegatedGoogleEvent({
       subject: delegationSubject,
@@ -88,6 +94,7 @@ export async function POST(request: NextRequest) {
       slug,
       clientName,
       clientEmail,
+      providerName,
       summary: eventSummary,
       startIso: start.toISOString(),
       endIso: end.toISOString(),
@@ -104,7 +111,7 @@ export async function POST(request: NextRequest) {
       expiresAt: Math.max(end.getTime() + 30 * 24 * 60 * 60_000, Date.now() + 90 * 24 * 60 * 60_000),
     });
     const manageUrl = appUrl(`/manage/${managementToken}`).toString();
-    const rescheduleUrl = appUrl(`/?calendar=${encodeURIComponent(slug)}`).toString();
+    const rescheduleUrl = appUrl(`/?calendar=${encodeURIComponent(slug)}&reschedule=${encodeURIComponent(managementToken)}`).toString();
     const compactUtc = (value: Date) => value.toISOString().replace(/[-:]/g, '').replace('.000', '');
     const googleCalUrl = new URL('https://calendar.google.com/calendar/render');
     googleCalUrl.searchParams.set('action', 'TEMPLATE');
@@ -117,6 +124,13 @@ export async function POST(request: NextRequest) {
     outlookCalUrl.searchParams.set('enddt', end.toISOString());
     outlookCalUrl.searchParams.set('body', description);
 
+    if (previousBooking) {
+      const secondary = previousBooking.events.filter((event) => !event.notifyAttendee);
+      const primary = previousBooking.events.filter((event) => event.notifyAttendee);
+      await Promise.all(secondary.map((event) => deleteDelegatedGoogleEvent(event)));
+      await Promise.all(primary.map((event) => deleteDelegatedGoogleEvent(event)));
+    }
+
     return NextResponse.json({
       success: true,
       eventId: primaryEvent.id,
@@ -128,6 +142,7 @@ export async function POST(request: NextRequest) {
       startIso: start.toISOString(),
       outlookCalUrl: outlookCalUrl.toString(),
       googleCalUrl: googleCalUrl.toString(),
+      emailKind: previousBooking ? 'change' : 'confirmation',
     });
   } catch (error) {
     if (error instanceof WebflowConfigurationError) {

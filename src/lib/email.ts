@@ -14,6 +14,7 @@ export interface ConfirmationEmailInput {
   meetingLink?: string;
   outlookCalUrl?: string;
   googleCalUrl?: string;
+  emailKind?: 'confirmation' | 'change';
 }
 
 const escapeHtml = (value: string) =>
