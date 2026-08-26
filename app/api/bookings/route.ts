@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'That meeting option is unavailable.' }, { status: 404 });
     }
     const previousBooking = rescheduleToken ? readBookingManagementToken(rescheduleToken) : null;
-    if (rescheduleToken && (!previousBooking || previousBooking.clientEmail.toLowerCase() !== clientEmail)) {
+    if (rescheduleToken && (!previousBooking || previousBooking.clientEmail.toLowerCase() !== clientEmail || previousBooking.slug !== slug)) {
       return NextResponse.json({ error: 'The reschedule link is invalid or expired.' }, { status: 400 });
     }
 
