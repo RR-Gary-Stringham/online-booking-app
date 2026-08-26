@@ -64,7 +64,6 @@ export default function AdminDashboard({
   // Embed code parameters
   const [embedWidth, setEmbedWidth] = useState('100%');
   const [embedHeight, setEmbedHeight] = useState('650');
-  const [embedShadow, setEmbedShadow] = useState(true);
   const [copied, setCopied] = useState(false);
 
   // Settings form states
@@ -148,9 +147,8 @@ export default function AdminDashboard({
   }, [activeTab, googleToken, publicAppUrl]);
 
   const embedCodeSnippet = useMemo(() => {
-    const shadowStyle = embedShadow ? 'box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);' : '';
-    return `<iframe src="${absoluteEmbedUrl}" width="${embedWidth}" height="${embedHeight}" style="border: 1px solid #f1f5f9; border-radius: 20px; ${shadowStyle}"></iframe>`;
-  }, [absoluteEmbedUrl, embedWidth, embedHeight, embedShadow]);
+    return `<iframe src="${absoluteEmbedUrl}" width="${embedWidth}" height="${embedHeight}" style="display: block; width: 100%; max-width: none; border: 0; border-radius: 0; box-shadow: none; background: transparent;"></iframe>`;
+  }, [absoluteEmbedUrl, embedWidth, embedHeight]);
 
   // Bookings stats
   const statsBookings = useMemo(() => {
