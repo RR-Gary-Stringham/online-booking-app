@@ -1508,36 +1508,36 @@ main > [class*="bg-white"][class*="border"] > div:first-child > div:first-child 
 }
 
 /* Client booking surface: explicit REVREBEL component treatment. */
-.booking-widget {
-    color: #163666 !important;
-    background: #fafafa !important;
-    border: 3px solid #163666 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+.booking-widget:not(.is-embed-view) {
+    color: #163666;
+    background: #fafafa;
+    border: 3px solid #163666;
+    border-radius: 0;
+    box-shadow: none;
 }
 
 /* The host webpage owns all framing when the scheduler is embedded. */
 html.booking-embed-document,
 body.booking-embed-document,
 body.booking-embed-document #root {
-    min-height: 0 !important;
-    background: transparent !important;
-    background-color: transparent !important;
-    background-image: none !important;
+    min-height: 0;
+    background: transparent;
+    background-color: transparent;
+    background-image: none;
 }
 
 body.booking-embed-document::before {
-    display: none !important;
+    display: none;
 }
 
 .booking-widget.is-embed-view {
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
 }
 
 .booking-widget.is-embed-view .booking-widget-header {
-    border-bottom: 0 !important;
+    border-bottom: 0;
 }
 
 .booking-widget,

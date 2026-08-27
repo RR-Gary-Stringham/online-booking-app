@@ -148,17 +148,7 @@ export default function AdminDashboard({
 
   const embedCodeSnippet = useMemo(() => {
     const appOrigin = new URL(absoluteEmbedUrl).origin;
-    return `<style>
-.section:has(> .booking-calender) {
-  border: 0 !important;
-}
-.booking-calender,
-.booking-calender > .calendar-block-embed {
-  border: 0 !important;
-  box-shadow: none !important;
-}
-</style>
-<iframe src="${absoluteEmbedUrl}" title="REVREBEL booking calendar" data-rr-booking-embed width="${embedWidth}" height="${embedHeight}" scrolling="no" style="display:block;width:100%;max-width:none;border:0;border-radius:0;box-shadow:none;background:transparent;overflow:hidden;"></iframe>
+    return `<iframe src="${absoluteEmbedUrl}" title="REVREBEL booking calendar" data-rr-booking-embed width="${embedWidth}" height="${embedHeight}" scrolling="no" style="display:block;width:100%;max-width:none;border:0;border-radius:0;box-shadow:none;background:transparent;overflow:hidden;"></iframe>
 <script>
 (() => {
   const frame = document.currentScript.previousElementSibling;
