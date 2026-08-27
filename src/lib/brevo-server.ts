@@ -3,9 +3,9 @@ import 'server-only';
 export type BookingEmailKind = 'confirmation' | 'change' | 'cancellation';
 
 const DEFAULT_TEMPLATE_IDS: Record<BookingEmailKind, number> = {
-  confirmation: 9,
-  cancellation: 10,
-  change: 11,
+  confirmation: 12,
+  cancellation: 13,
+  change: 14,
 };
 
 const TEMPLATE_ENV_NAMES: Record<BookingEmailKind, string> = {
