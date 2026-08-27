@@ -167,21 +167,38 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
   useEffect(() => {
     if (!isEmbedMode || window.parent === window) return;
 
+    let animationFrame = 0;
+    let lastHeight = 0;
+
     const reportHeight = () => {
-      window.parent.postMessage(
-        {
-          type: 'rr-booking-resize',
-          height: document.documentElement.scrollHeight,
-        },
-        '*',
-      );
+      cancelAnimationFrame(animationFrame);
+      animationFrame = requestAnimationFrame(() => {
+        const content = document.querySelector<HTMLElement>('.booking-widget');
+        const height = Math.ceil(content?.getBoundingClientRect().height ?? document.body.scrollHeight);
+        if (!height || height === lastHeight) return;
+        lastHeight = height;
+        window.parent.postMessage(
+          {
+            type: 'rr-booking-resize',
+            height,
+          },
+          '*',
+        );
+      });
     };
 
     const resizeObserver = new ResizeObserver(reportHeight);
-    resizeObserver.observe(document.body);
+    const content = document.querySelector<HTMLElement>('.booking-widget');
+    resizeObserver.observe(content ?? document.body);
+    window.addEventListener('resize', reportHeight);
+    void document.fonts?.ready.then(reportHeight);
     reportHeight();
 
-    return () => resizeObserver.disconnect();
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', reportHeight);
+    };
   }, [isEmbedMode, data, viewMode]);
 
   // Sync methods back to storage

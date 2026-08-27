@@ -147,7 +147,22 @@ export default function AdminDashboard({
   }, [activeTab, googleToken, publicAppUrl]);
 
   const embedCodeSnippet = useMemo(() => {
-    return `<iframe src="${absoluteEmbedUrl}" width="${embedWidth}" height="${embedHeight}" style="display: block; width: 100%; max-width: none; border: 0; border-radius: 0; box-shadow: none; background: transparent;"></iframe>`;
+    const appOrigin = new URL(absoluteEmbedUrl).origin;
+    return `<iframe src="${absoluteEmbedUrl}" title="REVREBEL booking calendar" data-rr-booking-embed width="${embedWidth}" height="${embedHeight}" scrolling="no" style="display:block;width:100%;max-width:none;border:0;border-radius:0;box-shadow:none;background:transparent;overflow:hidden;"></iframe>
+<script>
+(() => {
+  const frame = document.currentScript.previousElementSibling;
+  const appOrigin = ${JSON.stringify(appOrigin)};
+  window.addEventListener('message', (event) => {
+    if (event.origin !== appOrigin || event.source !== frame.contentWindow) return;
+    if (event.data?.type !== 'rr-booking-resize') return;
+    const height = Math.ceil(Number(event.data.height));
+    if (!Number.isFinite(height) || height < 1) return;
+    frame.height = String(height);
+    frame.style.height = height + 'px';
+  });
+})();
+</script>`;
   }, [absoluteEmbedUrl, embedWidth, embedHeight]);
 
   // Bookings stats
