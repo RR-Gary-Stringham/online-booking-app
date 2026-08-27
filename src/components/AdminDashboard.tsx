@@ -246,6 +246,8 @@ export default function AdminDashboard({
     setTestStatus('loading');
     setTestError('');
     try {
+      const testMeetingTime = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const testManageUrl = `${publicAppUrl.replace(/\/$/, '')}/manage/test-booking`;
       const response = await fetch(`${publicAppUrl.replace(/\/$/, '')}/api/send-confirmation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -254,9 +256,16 @@ export default function AdminDashboard({
           clientName: 'Test Recipient',
           meetingType: 'Strategic Growth Review',
           dateTime: 'Monday, June 15, 2026 at 12:30 PM (EST)',
+          meetingTime: testMeetingTime,
           providerName,
           meetingDuration: 60,
           referenceId: 'b-9999999',
+          manageUrl: testManageUrl,
+          meetingLink: 'https://meet.google.com/example-test-link',
+          cancelUrl: `${testManageUrl}#cancel`,
+          rescheduleUrl: `${publicAppUrl.replace(/\/$/, '')}?calendar=test&reschedule=test-booking`,
+          outlookCalUrl: 'https://outlook.office.com/calendar/0/deeplink/compose',
+          googleCalUrl: 'https://calendar.google.com/calendar/render?action=TEMPLATE',
           brevoApiKey,
           brevoSenderEmail,
           brevoSenderName,

@@ -42,6 +42,14 @@ export async function sendBrevoBookingEmail(input: {
     throw new BrevoConfigurationError(`${TEMPLATE_ENV_NAMES[input.kind]} must be a positive template ID.`);
   }
 
+  console.info('[brevo] Sending booking email.', {
+    kind: input.kind,
+    templateId,
+    parameters: Object.fromEntries(
+      Object.entries(input.params).map(([name, value]) => [name, Boolean(value)]),
+    ),
+  });
+
   const response = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { accept: 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
@@ -54,5 +62,10 @@ export async function sendBrevoBookingEmail(input: {
   });
   const result = await response.json().catch(() => ({})) as { message?: string; messageId?: string };
   if (!response.ok) throw new Error(result.message || `Brevo rejected template ${templateId}.`);
+  console.info('[brevo] Booking email accepted.', {
+    kind: input.kind,
+    templateId,
+    messageId: result.messageId || null,
+  });
   return result;
 }
