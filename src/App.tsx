@@ -330,6 +330,8 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
     } catch (err) {
       console.error("Failed to dispatch Brevo transactional email:", err);
     }
+
+    return bookingResult;
   };
 
   if (!data) {

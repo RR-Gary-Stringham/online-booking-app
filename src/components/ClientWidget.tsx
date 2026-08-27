@@ -15,12 +15,21 @@ import {
 } from '../lib/date';
 import RRGoogleIcon from './RRGoogleIcon';
 
+export interface BookingConfirmationResult {
+  manageUrl?: string;
+  cancelUrl?: string;
+  rescheduleUrl?: string;
+  meetingUrl?: string;
+  outlookCalUrl?: string;
+  googleCalUrl?: string;
+}
+
 interface ClientWidgetProps {
   settings: ProviderSettings;
   workingHours: WeeklyWorkingDay[];
   meetingTypes: MeetingType[];
   bookings: Booking[];
-  onAddBooking: (booking: Omit<Booking, 'id' | 'createdAt' | 'status'>) => Promise<void>;
+  onAddBooking: (booking: Omit<Booking, 'id' | 'createdAt' | 'status'>) => Promise<BookingConfirmationResult | void>;
   isEmbedPreview?: boolean;
   googleEvents?: CalendarEvent[];
   googleUser?: any | null;
@@ -64,6 +73,7 @@ export default function ClientWidget({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recentBookingId, setRecentBookingId] = useState('');
+  const [confirmationLinks, setConfirmationLinks] = useState<BookingConfirmationResult>({});
 
   useEffect(() => {
     setViewerTimeZone(browserTimeZone());
@@ -265,7 +275,7 @@ export default function ClientWidget({
         clientNotes.trim() ? `Additional Information: ${clientNotes.trim()}` : '',
       ].filter(Boolean).join('\n');
       setRecentBookingId(generatedId);
-      await onAddBooking({
+      const confirmation = await onAddBooking({
         meetingTypeId: selectedType!.id,
         clientName,
         clientEmail,
@@ -275,6 +285,7 @@ export default function ClientWidget({
         clientTimezone: viewerTimeZone,
         providerTimezone: settings.timezone,
       });
+      setConfirmationLinks(confirmation || {});
       setStep('success');
     } catch (error) {
       setSubmissionError(error instanceof Error ? error.message : 'The meeting could not be confirmed.');
@@ -296,6 +307,7 @@ export default function ClientWidget({
     setClientPhone('');
     setClientCompany('');
     setClientNotes('');
+    setConfirmationLinks({});
     setErrors({});
   };
 
@@ -310,6 +322,15 @@ export default function ClientWidget({
       day: 'numeric',
     });
   }, [selectedDateStr]);
+
+  const confirmationTimeRange = useMemo(() => {
+    if (!selectedProviderDateStr || !selectedTimeSlot || !selectedType) return selectedDisplayTime;
+    const start = zonedDateTimeToUtc(selectedProviderDateStr, selectedTimeSlot, settings.timezone);
+    const end = new Date(start.getTime() + selectedType.duration * 60_000);
+    const startLabel = formatTimeInTimeZone(start, viewerTimeZone).replace(/^0/, '');
+    const endLabel = formatTimeInTimeZone(end, viewerTimeZone).replace(/^0/, '');
+    return `${startLabel}–${endLabel}`;
+  }, [selectedDisplayTime, selectedProviderDateStr, selectedTimeSlot, selectedType, settings.timezone, viewerTimeZone]);
 
   // Prefer the CMS/provider record, then the connected Google profile.
   const displayName = useMemo<string>(() => {
@@ -431,26 +452,33 @@ export default function ClientWidget({
             </div>
           </div>
 
-          <div className="timezone-control timezone-control-header">
-            <label htmlFor="viewer-timezone">Time zone</label>
-            <select
-              id="viewer-timezone"
-              value={viewerTimeZone}
-              onChange={(event) => {
-                setViewerTimeZone(event.target.value);
-                setWindowOffset(0);
-                setSelectedDateStr('');
-                setSelectedTimeSlot('');
-                setSelectedProviderDateStr('');
-                setSelectedDisplayTime('');
-              }}
-              aria-label="Display timezone"
-            >
-              {timeZoneOptions.map((timeZone) => (
-                <option key={timeZone} value={timeZone}>{timeZone.replaceAll('_', ' ')}</option>
-              ))}
-            </select>
-          </div>
+          {step === 'success' ? (
+            <div className="confirmation-timezone" aria-label={`Meeting time zone ${viewerTimeZone}`}>
+              <span>Time zone</span>
+              <strong>{viewerTimeZone}</strong>
+            </div>
+          ) : (
+            <div className="timezone-control timezone-control-header">
+              <label htmlFor="viewer-timezone">Time zone</label>
+              <select
+                id="viewer-timezone"
+                value={viewerTimeZone}
+                onChange={(event) => {
+                  setViewerTimeZone(event.target.value);
+                  setWindowOffset(0);
+                  setSelectedDateStr('');
+                  setSelectedTimeSlot('');
+                  setSelectedProviderDateStr('');
+                  setSelectedDisplayTime('');
+                }}
+                aria-label="Display timezone"
+              >
+                {timeZoneOptions.map((timeZone) => (
+                  <option key={timeZone} value={timeZone}>{timeZone.replaceAll('_', ' ')}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </header>
 
         <AnimatePresence mode="wait">
@@ -761,21 +789,65 @@ export default function ClientWidget({
                   <span>Confirmed</span>
                 </h1>
                 <p className="confirmation-message">
-                  <strong>Get ready to dig into the good stuff — insights, strategy, and possibly a metaphor or two about space travel or spreadsheets. Your time with us is confirmed and we’ll bring the brains, bandwidth, and a finely tuned playlist of solutions.</strong>
+                  Your meeting is officially locked in and we’ve sent a calendar invite to <strong>{clientEmail}</strong> with all the details.
+                </p>
+                <p className="confirmation-supporting-copy">
+                  <em>(If it doesn’t hit your inbox within a few minutes, check the usual suspects: spam, promotions folder)</em>
+                </p>
+                <p className="confirmation-expectation-copy">
+                  We’ll bring the insights. You bring the ambition. Together, we’ll dig into what’s working, what could work harder, and the next moves worth making.
+                </p>
+                <p className="confirmation-expectation-copy">
+                  Expect smart strategy, clear direction, and just enough rebellion to keep things interesting.
                 </p>
               </div>
 
               <div className="confirmation-details">
-                <p className="confirmation-intro">
-                  Your meeting with {displayName} is officially locked in for<br />
-                  {formattedSelectedDate} at {selectedDisplayTime} ({viewerTimeZone.replaceAll('_', ' ')}).
-                </p>
+                <div className="confirmation-summary">
+                  <p className="confirmation-meeting-type">{selectedType?.name || displayName}</p>
+                  <p className="confirmation-date">{formattedSelectedDate}</p>
+                  <p className="confirmation-time">{confirmationTimeRange}</p>
+                  <p className="confirmation-zone">{viewerTimeZone}</p>
+                </div>
+
+                <div className="confirmation-actions" aria-label="Meeting actions">
+                  {confirmationLinks.googleCalUrl && (
+                    <a
+                      className="confirmation-action"
+                      href={confirmationLinks.googleCalUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <CalendarIcon aria-hidden="true" />
+                      Add to Google Calendar
+                    </a>
+                  )}
+                  {confirmationLinks.outlookCalUrl && (
+                    <a
+                      className="confirmation-action"
+                      href={confirmationLinks.outlookCalUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <CalendarIcon aria-hidden="true" />
+                      Add to Outlook
+                    </a>
+                  )}
+                </div>
                 <button
                   onClick={resetFlow}
-                  className="rr-button-outline cursor-pointer"
+                  className="confirmation-action confirmation-schedule-another cursor-pointer"
                 >
                   Schedule Another
                 </button>
+
+                {(confirmationLinks.rescheduleUrl || confirmationLinks.cancelUrl || confirmationLinks.manageUrl) && (
+                  <div className="confirmation-management-links">
+                    <a href={confirmationLinks.rescheduleUrl || confirmationLinks.manageUrl}>Change meeting</a>
+                    <span aria-hidden="true">|</span>
+                    <a href={confirmationLinks.cancelUrl || confirmationLinks.manageUrl}>Cancel meeting</a>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

@@ -2161,31 +2161,6 @@ main > * {
     outline-offset: 2px;
 }
 
-/* Confirmation cascade guards: keep the reference palette and compact proportions. */
-.booking-widget.is-confirmation-view .confirmation-layout {
-    padding-top: 68px;
-    padding-bottom: 62px;
-}
-
-.booking-widget.is-confirmation-view .confirmation-intro {
-    color: #00a6b6 !important;
-    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
-    font-weight: 400 !important;
-}
-
-.booking-widget.is-confirmation-view .confirmation-message,
-.booking-widget.is-confirmation-view .confirmation-message strong {
-    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
-    font-weight: 400 !important;
-}
-
-@media (max-width: 640px) {
-    .booking-widget.is-confirmation-view .confirmation-layout {
-        padding-top: 42px;
-        padding-bottom: 48px;
-    }
-}
-
 /* Workspace navigation specificity guards against the legacy provider rail. */
 .admin-workspace.lg\:grid-cols-12 > .lg\:col-span-3 {
     color: #163666 !important;
@@ -2474,131 +2449,278 @@ body .app-shell {
     }
 }
 
-/* Confirmation composition fills the embedding parent while its content stays responsive. */
+/* Content-sized editorial confirmation. The host page owns the outer frame. */
 .booking-widget.is-confirmation-view {
-    width: 100% !important;
-    max-width: none !important;
-    min-height: 100vh;
-    height: 100%;
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+    height: auto;
 }
 
 .booking-widget.is-confirmation-view > .relative {
     display: flex;
     flex-direction: column;
     width: 100%;
-    min-height: 100vh;
-    padding: 0 !important;
+    min-height: 0;
+    padding: 0;
 }
 
 .booking-widget.is-confirmation-view .booking-widget-header {
-    min-height: 122px;
-    margin: 0 !important;
-    padding: 34px 78px !important;
-    border-bottom: 2px solid #163666 !important;
+    min-height: 0;
+    margin: 0;
+    padding: 30px 64px;
+    border-bottom: 2px solid #163666;
 }
 
-.booking-widget.is-confirmation-view .booking-widget-header > div:first-child {
-    gap: 14px !important;
+.booking-widget.is-confirmation-view .provider-identity {
+    gap: 18px;
 }
 
-.booking-widget.is-confirmation-view .booking-widget-header .avatar-initials,
-.booking-widget.is-confirmation-view .booking-widget-header img {
-    width: 38px !important;
-    height: 38px !important;
+.booking-widget.is-confirmation-view .booking-widget-header .provider-avatar {
+    width: 58px !important;
+    height: 58px !important;
+    min-width: 58px;
 }
 
 .booking-widget.is-confirmation-view .booking-widget-header .avatar-initials {
-    font-size: 20px !important;
+    font-size: 30px !important;
 }
 
 .booking-widget.is-confirmation-view .booking-widget-header h1 {
-    font-size: 18px !important;
-    letter-spacing: 0 !important;
+    font-size: 24px;
+    letter-spacing: 0;
 }
 
 .booking-widget.is-confirmation-view .booking-widget-header .provider-title {
-    margin-top: 2px !important;
-    font-size: 9px !important;
+    margin-top: 4px;
+    font-size: 10px;
+}
+
+.booking-widget .confirmation-timezone {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 220px;
+    color: #163666;
+    font-family: "Roboto", Arial, Helvetica, sans-serif;
+    text-align: left;
+}
+
+.booking-widget .confirmation-timezone span {
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.booking-widget .confirmation-timezone strong {
+    font-size: 16px;
+    font-weight: 400;
 }
 
 .booking-widget .confirmation-layout {
     display: grid;
-    flex: 1 1 auto;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-    align-items: center;
-    gap: 46px;
-    padding: 80px 78px 84px;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    align-items: start;
+    gap: 64px;
+    padding: 64px;
     text-align: left;
 }
 
 .booking-widget .confirmation-title {
     display: flex;
     flex-direction: column;
-    margin: 0 0 24px;
+    margin: 0 0 34px;
     color: #163666;
-    font: 700 54px/0.88 "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif;
+    font: 700 clamp(56px, 5.6vw, 72px)/0.86 "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif;
     letter-spacing: -0.035em;
     text-transform: uppercase;
 }
 
+.booking-widget .confirmation-message,
+.booking-widget .confirmation-supporting-copy,
+.booking-widget .confirmation-expectation-copy {
+    max-width: 520px;
+    color: #163666;
+    font-family: "Roboto", Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
 .booking-widget .confirmation-message {
-    max-width: 380px;
     margin: 0;
-    font-size: 11px !important;
-    line-height: 1.38 !important;
+}
+
+.booking-widget .confirmation-message strong {
+    font-weight: 700;
+}
+
+.booking-widget .confirmation-supporting-copy {
+    margin: 20px 0 0;
+    font-size: 14px;
+}
+
+.booking-widget .confirmation-supporting-copy em {
+    font-weight: 300;
+}
+
+.booking-widget .confirmation-expectation-copy {
+    margin: 20px 0 0;
 }
 
 .booking-widget .confirmation-details {
-    padding-top: 12px;
+    min-width: 0;
+    padding-left: 64px;
+    border-left: 2px solid #163666;
 }
 
-.booking-widget .confirmation-intro {
-    margin: 0 0 24px;
-    color: #35b8c5 !important;
-    font-size: 11px !important;
-    line-height: 1.42 !important;
+.booking-widget .confirmation-summary {
+    padding-bottom: 20px;
+    border-bottom: 2px solid #163666;
 }
 
-.booking-widget.is-confirmation-view .rr-button-outline {
-    padding: 10px 18px;
-    font-size: 11px;
+.booking-widget .confirmation-summary p {
+    margin: 0;
+}
+
+.booking-widget .confirmation-meeting-type {
+    margin-bottom: 12px !important;
+    font: 700 20px/1 "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.booking-widget .confirmation-date,
+.booking-widget .confirmation-time,
+.booking-widget .confirmation-zone {
+    font-family: "Roboto", Arial, Helvetica, sans-serif;
+    font-size: clamp(18px, 2vw, 24px);
+    font-weight: 400;
+    line-height: 1.15;
+}
+
+.booking-widget .confirmation-time,
+.booking-widget .confirmation-zone {
+    margin-top: 8px !important;
+}
+
+.booking-widget .confirmation-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.booking-widget .confirmation-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 12px 16px;
+    color: #163666;
+    background: transparent;
+    border: 3px solid #163666;
+    border-radius: 2px;
+    font: 700 15px/1 "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif;
+    letter-spacing: 0.04em;
+    text-align: center;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: background-color 150ms ease, color 150ms ease;
+}
+
+.booking-widget .confirmation-action svg {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    stroke: currentColor;
+}
+
+.booking-widget .confirmation-action:hover,
+.booking-widget .confirmation-action:focus-visible {
+    color: #163666;
+    background: #b2d3de;
+    outline: 3px solid #455e84;
+    outline-offset: -3px;
+}
+
+.booking-widget .confirmation-schedule-another {
+    min-width: 260px;
+    margin-top: 14px;
+}
+
+.booking-widget .confirmation-management-links {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 18px;
+    color: #163666;
+    font-family: "Roboto", Arial, Helvetica, sans-serif;
+    font-size: 15px;
+}
+
+.booking-widget .confirmation-management-links a {
+    color: #163666;
+    text-underline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+    .booking-widget .confirmation-layout {
+        grid-template-columns: 1fr;
+        gap: 44px;
+        padding: 52px 40px;
+    }
+
+    .booking-widget .confirmation-details {
+        padding-top: 44px;
+        padding-left: 0;
+        border-top: 2px solid #163666;
+        border-left: 0;
+    }
 }
 
 @media (max-width: 640px) {
     .booking-widget.is-confirmation-view .booking-widget-header {
-        min-height: 0;
-        padding: 24px !important;
+        gap: 22px;
+        padding: 24px;
+    }
+
+    .booking-widget .confirmation-timezone {
+        min-width: 0;
     }
 
     .booking-widget .confirmation-layout {
-        grid-template-columns: 1fr;
-        gap: 28px;
+        gap: 36px;
         padding: 42px 24px 48px;
     }
 
     .booking-widget .confirmation-title {
-        font-size: 46px;
+        margin-bottom: 26px;
+        font-size: 52px;
+    }
+
+    .booking-widget .confirmation-message,
+    .booking-widget .confirmation-supporting-copy,
+    .booking-widget .confirmation-expectation-copy {
+        font-size: 15px;
     }
 
     .booking-widget .confirmation-details {
-        padding-top: 0;
+        padding-top: 36px;
     }
-}
 
-.booking-widget .confirmation-intro,
-.booking-widget .confirmation-message,
-.booking-widget .confirmation-message strong {
-    color: #163666 !important;
-    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
-}
+    .booking-widget .confirmation-actions {
+        grid-template-columns: 1fr;
+    }
 
-.booking-widget .confirmation-intro {
-    font-weight: 400;
-}
+    .booking-widget .confirmation-schedule-another {
+        width: 100%;
+        min-width: 0;
+    }
 
-.booking-widget .confirmation-message,
-.booking-widget .confirmation-message strong {
-    font-weight: 700;
+    .booking-widget .confirmation-management-links {
+        flex-wrap: wrap;
+    }
 }
 
 .booking-widget .rr-button-outline {
@@ -2866,29 +2988,4 @@ body .app-shell {
     border: 2px solid #163666 !important;
     box-shadow: none !important;
     transform: none !important;
-}
-
-/* Confirmation final cascade guards. */
-.booking-widget.is-confirmation-view .confirmation-layout {
-    padding-top: 68px;
-    padding-bottom: 62px;
-}
-
-.booking-widget.is-confirmation-view .confirmation-intro {
-    color: #35b8c5 !important;
-    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
-    font-weight: 300 !important;
-}
-
-.booking-widget.is-confirmation-view .confirmation-message,
-.booking-widget.is-confirmation-view .confirmation-message strong {
-    font-family: "Roboto", Arial, Helvetica, sans-serif !important;
-    font-weight: 400 !important;
-}
-
-@media (max-width: 640px) {
-    .booking-widget.is-confirmation-view .confirmation-layout {
-        padding-top: 42px;
-        padding-bottom: 48px;
-    }
 }
