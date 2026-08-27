@@ -19,6 +19,7 @@ export interface BrevoBookingParams {
   FIRSTNAME: string;
   INTERNAL_NAME: string;
   MEETING_TIME: string;
+  MEETING_TIME_DISPLAY: string;
   MEETING_LINK: string;
   CANCEL_LINK: string;
   RESCHEDULE_LINK: string;
@@ -27,6 +28,25 @@ export interface BrevoBookingParams {
 }
 
 export class BrevoConfigurationError extends Error {}
+
+export function formatBrevoMeetingTime(value: string, timeZone: string) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return value;
+  let resolvedTimeZone = timeZone || 'UTC';
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: resolvedTimeZone }).format(date);
+  } catch {
+    resolvedTimeZone = 'UTC';
+  }
+  const formatted = new Intl.DateTimeFormat('en-US', {
+    timeZone: resolvedTimeZone,
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(date);
+  return `${formatted} ${resolvedTimeZone}`;
+}
 
 export async function sendBrevoBookingEmail(input: {
   kind: BookingEmailKind;

@@ -1595,6 +1595,11 @@ body.booking-embed-document::before {
     justify-content: center;
 }
 
+.booking-widget .meeting-options-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+    min-width: 0;
+}
+
 .booking-widget .meeting-options-grid .duration-btn:hover,
 .booking-widget .meeting-options-grid .duration-btn[class*="bg-[var(--primary)]"] {
     color: #163666 !important;

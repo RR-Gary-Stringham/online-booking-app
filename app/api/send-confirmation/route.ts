@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ConfirmationEmailInput } from '@/src/lib/email';
-import { BrevoConfigurationError, sendBrevoBookingEmail } from '@/src/lib/brevo-server';
+import { BrevoConfigurationError, formatBrevoMeetingTime, sendBrevoBookingEmail } from '@/src/lib/brevo-server';
 
 const requiredTextFields: Array<keyof ConfirmationEmailInput> = [
   'clientEmail',
@@ -30,11 +30,13 @@ export async function POST(request: Request) {
   }
 
   const firstName = input.clientName.trim().split(/\s+/)[0] || 'Partner';
+  const meetingTime = input.meetingTime || input.dateTime;
   const templateParams = {
     FIRST_NAME: firstName,
     FIRSTNAME: firstName,
     INTERNAL_NAME: input.providerName || 'REVREBEL',
-    MEETING_TIME: input.meetingTime || input.dateTime,
+    MEETING_TIME: meetingTime,
+    MEETING_TIME_DISPLAY: formatBrevoMeetingTime(meetingTime, input.meetingTimeZone || 'UTC'),
     MEETING_LINK: input.meetingLink || '',
     CANCEL_LINK: input.cancelUrl || input.manageUrl || '',
     RESCHEDULE_LINK: input.rescheduleUrl || input.manageUrl || '',

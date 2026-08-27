@@ -11,6 +11,7 @@ export interface ConfirmationEmailInput {
   cancelUrl?: string;
   rescheduleUrl?: string;
   meetingTime?: string;
+  meetingTimeZone?: string;
   meetingLink?: string;
   outlookCalUrl?: string;
   googleCalUrl?: string;

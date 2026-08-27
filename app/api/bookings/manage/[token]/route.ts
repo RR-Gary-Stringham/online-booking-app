@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { deleteDelegatedGoogleEvent, getDelegatedGoogleEvent } from '@/src/lib/google-service-account';
 import { readBookingManagementToken } from '@/src/lib/booking-management-token';
 import { appUrl } from '@/src/lib/app-url';
-import { sendBrevoBookingEmail } from '@/src/lib/brevo-server';
+import { formatBrevoMeetingTime, sendBrevoBookingEmail } from '@/src/lib/brevo-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +53,7 @@ export async function DELETE(_request: Request, context: Context) {
           FIRSTNAME: booking.clientName.trim().split(/\s+/)[0] || 'Partner',
           INTERNAL_NAME: booking.providerName || 'REVREBEL',
           MEETING_TIME: booking.startIso,
+          MEETING_TIME_DISPLAY: formatBrevoMeetingTime(booking.startIso, booking.timeZone),
           MEETING_LINK: '',
           CANCEL_LINK: manageUrl,
           RESCHEDULE_LINK: rescheduleUrl,

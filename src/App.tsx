@@ -320,6 +320,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
             cancelUrl: bookingResult.cancelUrl,
             rescheduleUrl: bookingResult.rescheduleUrl,
             meetingTime: bookingResult.startIso,
+            meetingTimeZone: newBookingData.providerTimezone || data.settings.timezone,
             meetingLink: bookingResult.meetingUrl,
             outlookCalUrl: bookingResult.outlookCalUrl,
             googleCalUrl: bookingResult.googleCalUrl,

@@ -474,7 +474,7 @@ export default function ClientWidget({
                     No active consult formats configured.
                   </div>
                 ) : (
-                  <div className="meeting-options-grid grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="meeting-options-grid grid gap-3">
                     {activeMeetingTypes.map((mt) => {
                       const isSelected = selectedType?.id === mt.id;
                       return (
