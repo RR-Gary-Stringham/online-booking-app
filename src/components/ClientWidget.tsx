@@ -401,7 +401,7 @@ export default function ClientWidget({
         '--primary': primaryColorVar,
         '--primary-foreground': primaryForegroundVar
       } as React.CSSProperties}
-      className={`booking-widget w-full mx-auto overflow-hidden transition-all duration-500 ease-fluid relative ${step === 'success' ? 'is-confirmation-view' : ''} ${isEmbedPreview ? 'is-embed-view max-w-none' : 'max-w-5xl'}`}
+      className={`booking-widget w-full mx-auto overflow-hidden transition-all duration-500 ease-fluid relative ${step === 'success' ? 'is-confirmation-view' : ''} ${isEmbedPreview ? 'is-embed-view' : 'max-w-5xl'}`}
     >
       {/* Fine inner bezel outline */}
       {!isEmbedPreview && <div className="absolute inset-0 border border-white pointer-events-none rounded-[56px] m-[1px]"></div>}
