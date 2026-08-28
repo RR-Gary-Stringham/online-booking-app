@@ -44,6 +44,8 @@ export function formatBrevoMeetingTime(value: string, timeZone: string) {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
   }).format(date);
   return `${formatted} ${resolvedTimeZone}`;
 }
