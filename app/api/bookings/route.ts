@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { zonedDateTimeToUtc } from '@/src/lib/date';
-import { deleteDelegatedGoogleEvent, insertDelegatedGoogleEvent } from '@/src/lib/google-service-account';
+import {
+  deleteDelegatedGoogleEvent,
+  insertDelegatedGoogleEvent,
+  updateDelegatedGoogleEvent,
+} from '@/src/lib/google-service-account';
 import { appUrl } from '@/src/lib/app-url';
 import { createBookingManagementToken, readBookingManagementToken } from '@/src/lib/booking-management-token';
 import { listBookingPages, WebflowConfigurationError } from '@/src/lib/webflow-server';
@@ -59,41 +63,89 @@ export async function POST(request: NextRequest) {
     const delegationSubject = page.isUserTemplate
       ? page.googleCalendarId
       : assignedCalendarIds[0] || 'helpdesk@revrebel.io';
-    const eventSummary = `${page.templateName || page.name} — ${clientName}`;
-    const description = [clientNotes, `Booked through REVREBEL (${slug}).`].filter(Boolean).join('\n\n');
+    const meetingName = page.templateName || page.name || 'Meeting';
+    const clientFirstName = clientName.trim().split(/\s+/)[0] || 'Partner';
+    const eventSummary = `REVREBEL | ${meetingName} with ${clientFirstName}`;
+    const baseDescription = [clientNotes, `Booked through REVREBEL (${slug}).`].filter(Boolean).join('\n\n');
     const providerName = [page.firstName, page.lastName].filter(Boolean).join(' ') || page.templateName || page.name || 'REVREBEL';
 
+    // Create the conference without notifying the attendee yet. Once Google
+    // supplies the Meet URL, add it to the event details and send one complete invite.
     const primaryEvent = await insertDelegatedGoogleEvent({
       subject: delegationSubject,
       calendarId: destinationCalendarId,
       summary: eventSummary,
-      description,
+      description: baseDescription,
       startIso: start.toISOString(),
       endIso: end.toISOString(),
       timeZone,
       attendee: { email: clientEmail, displayName: clientName },
       createConference: true,
+      sendUpdates: 'none',
     });
+    const meetingUrl = primaryEvent.hangoutLink || '';
+    const description = [
+      baseDescription,
+      meetingUrl ? `Google Meet: ${meetingUrl}` : '',
+    ].filter(Boolean).join('\n\n');
 
     const blockCalendars = [...new Set(assignedCalendarIds)].filter((calendarId) => calendarId !== destinationCalendarId);
     const blockEvents = await Promise.all(blockCalendars.map(async (calendarId) => ({
       calendarId,
       event: await insertDelegatedGoogleEvent({
-      subject: calendarId,
-      calendarId,
-      summary: eventSummary,
-      description,
-      startIso: start.toISOString(),
-      endIso: end.toISOString(),
-      timeZone,
+        subject: calendarId,
+        calendarId,
+        summary: eventSummary,
+        description,
+        location: meetingUrl || undefined,
+        startIso: start.toISOString(),
+        endIso: end.toISOString(),
+        timeZone,
       }),
     })));
+
+    try {
+      if (previousBooking) {
+        const secondary = previousBooking.events.filter((event) => !event.notifyAttendee);
+        const primary = previousBooking.events.filter((event) => event.notifyAttendee);
+        await Promise.all(secondary.map((event) => deleteDelegatedGoogleEvent(event)));
+        await Promise.all(primary.map((event) => deleteDelegatedGoogleEvent(event)));
+      }
+
+      await updateDelegatedGoogleEvent({
+        subject: delegationSubject,
+        calendarId: destinationCalendarId,
+        eventId: primaryEvent.id,
+        description,
+        location: meetingUrl || undefined,
+        notifyAttendee: true,
+      });
+    } catch (error) {
+      // The attendee has not been notified until the final update above. Roll
+      // back the replacement so a retry cannot accumulate duplicate meetings.
+      await Promise.allSettled([
+        ...blockEvents.map(({ calendarId, event }) => deleteDelegatedGoogleEvent({
+          subject: calendarId,
+          calendarId,
+          eventId: event.id,
+          notifyAttendee: false,
+        })),
+        deleteDelegatedGoogleEvent({
+          subject: delegationSubject,
+          calendarId: destinationCalendarId,
+          eventId: primaryEvent.id,
+          notifyAttendee: false,
+        }),
+      ]);
+      throw error;
+    }
 
     const managementToken = createBookingManagementToken({
       version: 1,
       slug,
       clientName,
       clientEmail,
+      clientNotes,
       providerName,
       summary: eventSummary,
       startIso: start.toISOString(),
@@ -118,24 +170,19 @@ export async function POST(request: NextRequest) {
     googleCalUrl.searchParams.set('text', eventSummary);
     googleCalUrl.searchParams.set('dates', `${compactUtc(start)}/${compactUtc(end)}`);
     googleCalUrl.searchParams.set('details', description);
+    if (meetingUrl) googleCalUrl.searchParams.set('location', meetingUrl);
     const outlookCalUrl = new URL('https://outlook.office.com/calendar/0/deeplink/compose');
     outlookCalUrl.searchParams.set('subject', eventSummary);
     outlookCalUrl.searchParams.set('startdt', start.toISOString());
     outlookCalUrl.searchParams.set('enddt', end.toISOString());
     outlookCalUrl.searchParams.set('body', description);
-
-    if (previousBooking) {
-      const secondary = previousBooking.events.filter((event) => !event.notifyAttendee);
-      const primary = previousBooking.events.filter((event) => event.notifyAttendee);
-      await Promise.all(secondary.map((event) => deleteDelegatedGoogleEvent(event)));
-      await Promise.all(primary.map((event) => deleteDelegatedGoogleEvent(event)));
-    }
+    if (meetingUrl) outlookCalUrl.searchParams.set('location', meetingUrl);
 
     return NextResponse.json({
       success: true,
       eventId: primaryEvent.id,
       eventUrl: primaryEvent.htmlLink,
-      meetingUrl: primaryEvent.hangoutLink,
+      meetingUrl: meetingUrl || undefined,
       manageUrl,
       cancelUrl: `${manageUrl}#cancel`,
       rescheduleUrl,

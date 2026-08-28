@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Calendar as CalendarIcon, Clock, User, Mail, MessageSquare, CheckCircle, ArrowLeft, Globe, Lock } from 'lucide-react';
+import { Clock, User, Mail, MessageSquare, CheckCircle, ArrowLeft, Globe, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { WeeklyWorkingDay, MeetingType, Booking, ProviderSettings } from '../types';
 import { CalendarEvent } from '../lib/googleCalendar';
@@ -24,6 +24,36 @@ export interface BookingConfirmationResult {
   googleCalUrl?: string;
 }
 
+export interface ReschedulePrefill {
+  clientName: string;
+  clientEmail: string;
+  clientNotes?: string;
+}
+
+function GoogleCalendarIcon() {
+  return (
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <g fill="currentColor">
+        <path d="M155.02 110l4.88-36.6c.06-.49.09-.99.09-1.48 0-3.99-1.99-7.5-5-9.66V50.01c0-5.52-4.49-10-10-10H55c-5.51 0-10 4.48-10 10v12.25c-3.01 2.16-5 5.68-5 9.66 0 .5.03.99.09 1.5l4.88 36.59 -4.88 36.6c-.06.49-.09.99-.09 1.48 0 6.57 5.35 11.91 11.91 11.91h96.17c6.57 0 11.91-5.34 11.91-11.91 0-.5-.03-.99-.09-1.5L155.02 110ZM100 122.5c0 8.27-6.73 15-15 15s-15-6.73-15-15c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5c0 5.52 4.49 10 10 10s10-4.48 10-10 -4.49-10-10-10c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5c5.51 0 10-4.48 10-10s-4.49-10-10-10 -10 4.48-10 10c0 1.38-1.12 2.5-2.5 2.5s-2.5-1.12-2.5-2.5c0-8.27 6.73-15 15-15s15 6.73 15 15c0 5.22-2.68 9.81-6.74 12.5 4.05 2.69 6.74 7.28 6.74 12.5Zm30 12.5c0 1.38-1.12 2.5-2.5 2.5s-2.5-1.12-2.5-2.5V89.67l-11.11 7.41c-1.14.76-2.7.45-3.47-.69 -.77-1.15-.45-2.7.69-3.47l15-10c.77-.51 1.75-.56 2.57-.12 .81.43 1.32 1.28 1.32 2.2v50 0Zm15-75H55V50h90v10Z" />
+        <path d="M72.5 52.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5Z" />
+        <path d="M127.5 52.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5Z" />
+      </g>
+    </svg>
+  );
+}
+
+function OutlookCalendarIcon() {
+  return (
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <g fill="currentColor">
+        <path d="M160 84.4c0-2.2-1.58-3.99-3.5-3.99h-34.42v7.97h27.24l-17.87 14.72 -9.37-7.68v10.11l7.35 5.96c1.19.97 2.87.97 4.07 0L153 95.68v21.05h-30.92v7.97h34.42c1.93 0 3.5-1.78 3.5-3.99V87.94c0-.1 0-.18-.01-.28 0-.1.01-.19.01-.28 0 0 0-2.98 0-2.98Z" />
+        <path d="M77.48 116.45c5.03 0 8.25-6.62 8.25-16.51 0-8.2-2.38-16.51-8.25-16.51 -6.21 0-8.5 8.42-8.5 16.51 0 9.43 2.98 16.51 8.5 16.51Z" />
+        <path d="M40 149.85l74.71 5.48V44.66L40 51.23v98.62ZM77.83 71.3c12.76 0 21.27 11.56 21.27 28.07 0 20.1-10.81 29.31-21.95 29.31 -12.16 0-21.52-10.55-21.52-28.29 0-17.76 8.85-29.09 22.2-29.09Z" />
+      </g>
+    </svg>
+  );
+}
+
 interface ClientWidgetProps {
   settings: ProviderSettings;
   workingHours: WeeklyWorkingDay[];
@@ -35,6 +65,7 @@ interface ClientWidgetProps {
   googleUser?: any | null;
   onOpenProviderWorkspace?: () => void;
   providerWorkspaceUrl?: string;
+  reschedulePrefill?: ReschedulePrefill | null;
 }
 
 export default function ClientWidget({
@@ -48,6 +79,7 @@ export default function ClientWidget({
   googleUser = null,
   onOpenProviderWorkspace,
   providerWorkspaceUrl,
+  reschedulePrefill,
 }: ClientWidgetProps) {
   // Current client flow step: 'booking' | 'success'
   const [step, setStep] = useState<'booking' | 'success'>('booking');
@@ -78,6 +110,23 @@ export default function ClientWidget({
   useEffect(() => {
     setViewerTimeZone(browserTimeZone());
   }, []);
+
+  useEffect(() => {
+    if (!reschedulePrefill) return;
+    const nameParts = reschedulePrefill.clientName.trim().split(/\s+/).filter(Boolean);
+    const firstName = nameParts.shift() || '';
+    const notes = reschedulePrefill.clientNotes || '';
+    const phone = notes.match(/(?:^|\n)Phone:\s*([^\n]*)/i)?.[1]?.trim() || '';
+    const company = notes.match(/(?:^|\n)Hotel or Company:\s*([^\n]*)/i)?.[1]?.trim() || '';
+    const additional = notes.match(/(?:^|\n)Additional Information:\s*([\s\S]*)$/i)?.[1]?.trim() || '';
+
+    setClientFirstName(firstName);
+    setClientLastName(nameParts.join(' '));
+    setClientEmail(reschedulePrefill.clientEmail);
+    setClientPhone(phone);
+    setClientCompany(company);
+    setClientNotes(additional || (!phone && !company ? notes : ''));
+  }, [reschedulePrefill]);
 
   const timeZoneOptions = useMemo(() => {
     const zones = supportedTimeZones();
@@ -338,7 +387,7 @@ export default function ClientWidget({
     return configuredName || settings.name || String(googleUser?.displayName || '') || 'REVREBEL';
   }, [googleUser, settings.firstName, settings.lastName, settings.name]);
 
-  const profileImageUrl = settings.profileImageUrl || googleUser?.photoURL || '';
+  const profileImageUrl = settings.profileImageUrl || (settings.isUserTemplate !== false ? googleUser?.photoURL : '') || '';
   const providerInitials = displayName
     .split(/\s+/)
     .filter(Boolean)
@@ -818,8 +867,8 @@ export default function ClientWidget({
                       target="_blank"
                       rel="noreferrer"
                     >
-                      <CalendarIcon aria-hidden="true" />
-                      Add to Google Calendar
+                      <GoogleCalendarIcon />
+                      Add to Google
                     </a>
                   )}
                   {confirmationLinks.outlookCalUrl && (
@@ -829,7 +878,7 @@ export default function ClientWidget({
                       target="_blank"
                       rel="noreferrer"
                     >
-                      <CalendarIcon aria-hidden="true" />
+                      <OutlookCalendarIcon />
                       Add to Outlook
                     </a>
                   )}

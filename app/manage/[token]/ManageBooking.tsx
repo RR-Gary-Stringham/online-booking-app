@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 
 interface BookingDetails {
   clientName: string;
+  clientEmail: string;
+  clientNotes: string;
   summary: string;
   startIso: string;
   endIso: string;
@@ -45,7 +47,7 @@ export default function ManageBooking({ token, publicAppUrl }: { token: string; 
   };
 
   const rescheduleUrl = details
-    ? `${publicAppUrl}?calendar=${encodeURIComponent(details.slug)}`
+    ? `${publicAppUrl}?calendar=${encodeURIComponent(details.slug)}&reschedule=${encodeURIComponent(token)}`
     : publicAppUrl;
   const formattedDate = details ? new Intl.DateTimeFormat('en-US', {
     dateStyle: 'full',
@@ -69,14 +71,14 @@ export default function ManageBooking({ token, publicAppUrl }: { token: string; 
               {details.cancelled && <p className="font-bold uppercase mt-4 text-[#e05047]">Meeting cancelled</p>}
             </div>
             {!details.cancelled && (
-              <div className="flex flex-wrap gap-4">
-                <button type="button" onClick={cancelMeeting} disabled={busy} className="button bg-[#e05047] border-[#e05047] text-[#b2d3de] disabled:opacity-50">
+              <div className="manage-booking-actions">
+                <button type="button" onClick={cancelMeeting} disabled={busy} className="manage-booking-action manage-booking-action-danger">
                   {busy ? 'Cancelling…' : 'Cancel Meeting'}
                 </button>
-                <a href={rescheduleUrl} className="button-outline">Choose a New Time</a>
+                <a href={rescheduleUrl} className="manage-booking-action manage-booking-action-outline">Choose a New Time</a>
               </div>
             )}
-            {details.cancelled && <a href={rescheduleUrl} className="button-outline">Schedule Another</a>}
+            {details.cancelled && <a href={rescheduleUrl} className="manage-booking-action manage-booking-action-outline">Schedule Another</a>}
           </>
         )}
       </section>

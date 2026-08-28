@@ -18,6 +18,8 @@ export async function GET(_request: Request, context: Context) {
     const event = primary ? await getDelegatedGoogleEvent(primary) : null;
     return NextResponse.json({
       clientName: booking.clientName,
+      clientEmail: booking.clientEmail,
+      clientNotes: booking.clientNotes || '',
       summary: booking.summary,
       startIso: booking.startIso,
       endIso: booking.endIso,
