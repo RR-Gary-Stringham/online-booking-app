@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import ClientWidget from './components/ClientWidget';
+import ClientWidget, { type ReschedulePrefill } from './components/ClientWidget';
 import AdminDashboard from './components/AdminDashboard';
 import { loadWidgetData, saveWidgetData, FullWidgetData } from './lib/storage';
 import { Booking, MeetingType, ProviderSettings, WeeklyWorkingDay } from './types';
@@ -18,6 +18,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
   // Check if iframe rendering mode
   const [isEmbedMode, setIsEmbedMode] = useState(false);
   const [calendarSlug, setCalendarSlug] = useState('');
+  const [reschedulePrefill, setReschedulePrefill] = useState<ReschedulePrefill | null>(null);
 
   // App wide state loaded from helper
   const [data, setData] = useState<FullWidgetData | null>(null);
@@ -135,6 +136,36 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
 
     return () => controller.abort();
   }, [calendarSlug, isDataReady, publicAppUrl]);
+
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get('reschedule');
+    if (!token) {
+      setReschedulePrefill(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    fetch(appApiUrl(publicAppUrl, `/api/bookings/manage/${encodeURIComponent(token)}`), {
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const result = await response.json() as ReschedulePrefill & { error?: string };
+        if (!response.ok) throw new Error(result.error || 'This meeting could not be loaded.');
+        return result;
+      })
+      .then((result) => setReschedulePrefill({
+        clientName: result.clientName,
+        clientEmail: result.clientEmail,
+        clientNotes: result.clientNotes,
+      }))
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        console.error('[reschedule] Unable to prefill booking details.', error);
+      });
+
+    return () => controller.abort();
+  }, [publicAppUrl]);
 
   useEffect(() => {
     if (isEmbedMode || !googleUser?.displayName) return;
@@ -266,6 +297,13 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
       throw new Error(bookingResult.error || 'The meeting could not be added to Google Calendar.');
     }
 
+    const currentUrl = new URL(window.location.href);
+    if (currentUrl.searchParams.has('reschedule')) {
+      currentUrl.searchParams.delete('reschedule');
+      window.history.replaceState({}, '', `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`);
+      setReschedulePrefill(null);
+    }
+
     const bookingId = 'b-' + Math.floor(Math.random() * 10000000);
     const newBooking: Booking = {
       ...newBookingData,
@@ -355,6 +393,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
         googleUser={null}
         isEmbedPreview={true}
         providerWorkspaceUrl={appApiUrl(publicAppUrl, '?workspace=true')}
+        reschedulePrefill={reschedulePrefill}
       />
     );
   }
@@ -380,6 +419,7 @@ export default function App({ publicAppUrl }: { publicAppUrl: string }) {
                 googleEvents={googleEvents}
                 googleUser={googleUser}
                 isEmbedPreview={false}
+                reschedulePrefill={reschedulePrefill}
                 onOpenProviderWorkspace={() => {
                   if (googleToken) setViewMode('admin');
                   else void handleGoogleSignIn();

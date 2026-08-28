@@ -156,15 +156,17 @@ export async function insertDelegatedGoogleEvent(input: {
   calendarId: string;
   summary: string;
   description: string;
+  location?: string;
   startIso: string;
   endIso: string;
   timeZone: string;
   attendee?: { email: string; displayName: string };
   createConference?: boolean;
+  sendUpdates?: 'all' | 'none';
 }) {
   const accessToken = await getDelegatedGoogleAccessToken(input.subject);
   const params = new URLSearchParams({
-    sendUpdates: input.attendee ? 'all' : 'none',
+    sendUpdates: input.sendUpdates ?? (input.attendee ? 'all' : 'none'),
     conferenceDataVersion: input.createConference ? '1' : '0',
   });
   const response = await fetch(
@@ -178,6 +180,7 @@ export async function insertDelegatedGoogleEvent(input: {
       body: JSON.stringify({
         summary: input.summary,
         description: input.description,
+        location: input.location,
         start: { dateTime: input.startIso, timeZone: input.timeZone },
         end: { dateTime: input.endIso, timeZone: input.timeZone },
         attendees: input.attendee ? [input.attendee] : undefined,
@@ -192,6 +195,35 @@ export async function insertDelegatedGoogleEvent(input: {
     },
   );
   if (!response.ok) throw new Error(`Google event creation failed with ${response.status}.`);
+  return response.json() as Promise<{ id: string; htmlLink?: string; hangoutLink?: string }>;
+}
+
+export async function updateDelegatedGoogleEvent(input: {
+  subject: string;
+  calendarId: string;
+  eventId: string;
+  description: string;
+  location?: string;
+  notifyAttendee?: boolean;
+}) {
+  const accessToken = await getDelegatedGoogleAccessToken(input.subject);
+  const params = new URLSearchParams({ sendUpdates: input.notifyAttendee ? 'all' : 'none' });
+  const response = await fetch(
+    `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.eventId)}?${params}`,
+    {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        description: input.description,
+        location: input.location,
+      }),
+      cache: 'no-store',
+    },
+  );
+  if (!response.ok) throw new Error(`Google event update failed with ${response.status}.`);
   return response.json() as Promise<{ id: string; htmlLink?: string; hangoutLink?: string }>;
 }
 

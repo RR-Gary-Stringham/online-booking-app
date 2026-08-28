@@ -2633,7 +2633,8 @@ body .app-shell {
     width: 20px;
     height: 20px;
     flex: 0 0 auto;
-    stroke: currentColor;
+    fill: currentColor;
+    stroke: none;
 }
 
 .booking-widget .confirmation-action:hover,
@@ -2662,6 +2663,63 @@ body .app-shell {
 .booking-widget .confirmation-management-links a {
     color: #163666;
     text-underline-offset: 3px;
+}
+
+.manage-booking-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.manage-booking-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    padding: 12px 16px;
+    border: 3px solid;
+    border-radius: 2px;
+    font: 700 15px/1 "Khand", "Bahnschrift Condensed", "Avenir Next Condensed", "Arial Narrow", sans-serif;
+    letter-spacing: 0.04em;
+    text-align: center;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: background-color 150ms ease, color 150ms ease;
+}
+
+.manage-booking-action-danger {
+    color: #b2d3de;
+    background: #e05047;
+    border-color: #e05047;
+}
+
+.manage-booking-action-danger:hover,
+.manage-booking-action-danger:focus-visible {
+    color: #163666;
+    background: #faca78;
+    border-color: #e05047;
+}
+
+.manage-booking-action-outline {
+    color: #163666;
+    background: transparent;
+    border-color: #163666;
+}
+
+.manage-booking-action-outline:hover,
+.manage-booking-action-outline:focus-visible {
+    color: #163666;
+    background: #b2d3de;
+}
+
+.manage-booking-action:focus-visible {
+    outline: 3px solid #455e84;
+    outline-offset: 3px;
+}
+
+.manage-booking-action:disabled {
+    cursor: wait;
+    opacity: 0.55;
 }
 
 @media (max-width: 900px) {
